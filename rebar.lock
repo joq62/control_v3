@@ -1,0 +1,8 @@
+[{<<"lib_sd">>,
+  {git,"https://github.com/joq62/lib_sd.git",
+       {ref,"1c9552ee681e04725478db97ed31439076a97661"}},
+  0},
+ {<<"lib_ssh">>,
+  {git,"https://github.com/joq62/lib_ssh.git",
+       {ref,"7fa9c7798aa7158adea1f8eadf349204d9b635f7"}},
+  0}].
