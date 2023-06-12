@@ -18,6 +18,7 @@
 
 -define(C200,{"192.168.1.200",22,"ubuntu","festum01"}).
 -define(C202,{"192.168.1.202",22,"ubuntu","festum01"}).
+-define(C50,{"172.26.158.249",22,"joq62","festum01"}).
 
 %% --------------------------------------------------------------------
 %% Function: available_hosts()
@@ -39,7 +40,7 @@ start()->
 %%--------------------------------------------------------------------
 test0()->
     io:format("Start ~p~n",[{?MODULE,?FUNCTION_NAME,?LINE}]),
-    {Ip,Port,Uid,Pwd}=?C200,
+    {Ip,Port,Uid,Pwd}=?C50,
     TimeOut=5000,
     {ok,[]}=ssh_server:send_msg(Ip,Port,Uid,Pwd,"rm -rf glurk",TimeOut),
     Pwd1=ssh_server:send_msg(Ip,Port,Uid,Pwd,"pwd",TimeOut),
@@ -62,14 +63,14 @@ test0()->
 %%--------------------------------------------------------------------
 load_start()->
     io:format("Start ~p~n",[{?MODULE,?FUNCTION_NAME,?LINE}]),
-    {Ip,Port,Uid,Pwd}=?C200,
+    {Ip,Port,Uid,Pwd}=?C50,
     TimeOut=5000,
     GitPath="https://github.com/joq62/adder.git",
     Dir="adder",
     NodeName=Dir,
     Cookie="a_cookie",
     App=adder,
-    Node=list_to_atom(NodeName++"@"++"c200"),
+    Node=list_to_atom(NodeName++"@"++"c50"),
 
     {ok,["/home/ubuntu"]}=ssh_server:send_msg(Ip,Port,Uid,Pwd,"pwd",TimeOut),
     %%
@@ -110,14 +111,14 @@ load_start()->
 %% --------------------------------------------------------------------
 test1()->
     io:format("Start ~p~n",[{?MODULE,?FUNCTION_NAME}]),
-    {Ip,Port,Uid,Pwd}=?C200,
+    {Ip,Port,Uid,Pwd}=?C50,
     TimeOut=5000,
     {ok,["/home/ubuntu"]}=ssh_server:send_msg(Ip,Port,Uid,Pwd,"pwd",TimeOut),
     {ok,["/home/ubuntu"]}=ssh_server:send_msg(Ip,Port,Uid,Pwd,"pwd",TimeOut),
     {error,["bash: glurk: command not found"]}=ssh_server:send_msg(Ip,Port,Uid,Pwd,"glurk",TimeOut),
     {error,["rm: cannot remove 'glurk'"]}=ssh_server:send_msg(Ip,Port,Uid,Pwd,"rm -r glurk",TimeOut),
 
-     {error,["Database not available ",dbetcd_appl]}=ssh_server:send_msg("c200","pwd",TimeOut),
+     {error,["Database not available ",dbetcd_appl]}=ssh_server:send_msg("c50","pwd",TimeOut),
     
     ok.
 %% --------------------------------------------------------------------
