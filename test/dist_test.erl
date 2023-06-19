@@ -115,7 +115,7 @@ test_1()->
     [schedule]=rpc:call(N3,db_lock,read_all,[],5000),
     {ok,TransActionsId_40}=rpc:call(N3,db_lock,try_lock,[schedule,3000],5000),
     rpc:call(N3,init,stop,[],5000),
-    true=lib_control:check_stopped_node(N3),
+    true=vm_appl_controller:check_stopped_node(N3),
     locked=rpc:call(N1,db_lock,try_lock,[schedule,3000],5000),
     locked=rpc:call(N2,db_lock,try_lock,[schedule,3000],5000),
     

@@ -36,6 +36,9 @@ start()->
     ok=provider_test:start(node()),
     ok=dist_test:start(),
                  
+    %% 
+    ok=vm_appl_test:start(),
+
     io:format("Test OK !!! ~p~n",[?MODULE]),
     timer:sleep(2000),
     init:stop(),
