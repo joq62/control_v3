@@ -29,10 +29,91 @@
 start()->
    
     ok=setup(),
-    ok=create_deployment(),
-
+    {ok,DeploymentId}=create_deployment(),
+    ok=start_vm(DeploymentId),
+    ok=load_appl(DeploymentId),
+    
+    
+    ok=unload_appl(DeploymentId),
+    ok=stop_vm(DeploymentId),
+    ok=delete_deployment(DeploymentId),
     io:format("Test OK !!! ~p~n",[?MODULE]),
   
+    ok.
+
+
+%%--------------------------------------------------------------------
+%% @doc
+%% @spec
+%% @end
+%%--------------------------------------------------------------------
+load_appl(DeploymentId)->
+    io:format("Start ~p~n",[{?MODULE,?FUNCTION_NAME,?LINE}]),
+    %%
+    {ok,ProviderSpec}=db_deploy:read(provider_spec,DeploymentId),
+    {ok,App}=db_provider_spec:read(app,ProviderSpec),
+    {ok,Node}=db_deploy:read(node,DeploymentId),
+    NotLoadedApps=rpc:call(Node,application,loaded_applications,[],5000),
+    false=lists:keymember(App,1,NotLoadedApps),
+    ok=vm_appl_control:load_appl(DeploymentId),
+    LoadedApps=rpc:call(Node,application,loaded_applications,[],5000),
+    true=lists:keymember(App,1,LoadedApps),
+	
+    ok.
+%%--------------------------------------------------------------------
+%% @doc
+%% @spec
+%% @end
+%%--------------------------------------------------------------------
+unload_appl(DeploymentId)->
+    io:format("Start ~p~n",[{?MODULE,?FUNCTION_NAME,?LINE}]),
+    %%
+    {ok,Node}=db_deploy:read(node,DeploymentId),
+    {ok,ProviderSpec}=db_deploy:read(provider_spec,DeploymentId),
+    {ok,App}=db_provider_spec:read(app,ProviderSpec),
+    LoadedApps=rpc:call(Node,application,loaded_applications,[],5000),
+    true=lists:keymember(App,1,LoadedApps),
+    ok=vm_appl_control:unload_appl(DeploymentId),
+    NotLoadedApps=rpc:call(Node,application,loaded_applications,[],5000),
+    false=lists:keymember(App,1,NotLoadedApps),
+  
+    
+   
+	
+    ok.
+%%--------------------------------------------------------------------
+%% @doc
+%% @spec
+%% @end
+%%--------------------------------------------------------------------
+delete_deployment(DeploymentId)->
+    io:format("Start ~p~n",[{?MODULE,?FUNCTION_NAME,?LINE}]),
+    true=db_deploy:member(DeploymentId),
+    ok=vm_appl_control:delete_deployment(DeploymentId),
+    false=db_deploy:member(DeploymentId),    
+    ok.
+%%--------------------------------------------------------------------
+%% @doc
+%% @spec
+%% @end
+%%--------------------------------------------------------------------
+stop_vm(DeploymentId)->
+    io:format("Start ~p~n",[{?MODULE,?FUNCTION_NAME,?LINE}]),
+    true=vm_appl_control:stop_vm(DeploymentId),
+    {ok,Node}=db_deploy:read(node,DeploymentId),
+    pang=net_adm:ping(Node),
+    ok.
+
+%%--------------------------------------------------------------------
+%% @doc
+%% @spec
+%% @end
+%%--------------------------------------------------------------------
+start_vm(DeploymentId)->
+    io:format("Start ~p~n",[{?MODULE,?FUNCTION_NAME,?LINE}]),
+    true=vm_appl_control:start_vm(DeploymentId),
+    {ok,Node}=db_deploy:read(node,DeploymentId),
+    pong=net_adm:ping(Node),
     ok.
 %%--------------------------------------------------------------------
 %% @doc
@@ -45,7 +126,7 @@ create_deployment()->
     HostSpec="c50",
     Type="na",
     UniqueStr=?UniqueStr,
-    {ok,DeploymentId}=vm_appl_controller:create_deployment(ProviderSpec,HostSpec,Type,UniqueStr),
+    {ok,DeploymentId}=vm_appl_control:create_deployment(ProviderSpec,HostSpec,Type,UniqueStr),
     {ok,ProviderSpec}=db_deploy:read(provider_spec,DeploymentId),
     {ok,?UniqueStr}=db_deploy:read(node_name,DeploymentId),
     {ok,'unique1@c50'}=db_deploy:read(node,DeploymentId),
@@ -64,7 +145,7 @@ create_deployment()->
      [],"host_controller",'host_controller@c50'
     }=db_host_spec:read(HostSpec),
     
-    ok.
+    {ok,DeploymentId}.
 
 %%--------------------------------------------------------------------
 %% @doc

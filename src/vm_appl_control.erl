@@ -7,13 +7,13 @@
 %%% 
 %%% Created : 10 dec 2012
 %%% -------------------------------------------------------------------
--module(vm_appl_controller).
+-module(vm_appl_control).
  
  
 %% --------------------------------------------------------------------
 %% Include files
 %% --------------------------------------------------------------------
-
+-include("log.api").
 %% --------------------------------------------------------------------
 -define(ConfigFile_ToBeChanged,"config/sys.config").
 
@@ -30,10 +30,10 @@
 	 stop_vm/1,
 
 %	 create_dir/1,
-%	 load_appl/1,
+	 load_appl/1,
 %	 start_appl/1,
 %	 stop_appl/1,
-%	 unload_appl/1,
+	 unload_appl/1,
 %	 delete_dir/1
 	 
 	 check_stopped_node/1,
@@ -52,6 +52,48 @@
 %% ====================================================================
 %% External functions
 %% ====================================================================
+%%--------------------------------------------------------------------
+%% @doc
+%% @spec
+%% @end
+%%--------------------------------------------------------------------
+load_appl(DeploymentId)->
+    {ok,ProviderSpec}=db_deploy:read(provider_spec,DeploymentId),
+    {ok,GitPath}=db_provider_spec:read(git_path,ProviderSpec),
+    {ok,App}=db_provider_spec:read(app,ProviderSpec),
+    {ok,Dir}=db_deploy:read(dir,DeploymentId),
+    {ok,Node}=db_deploy:read(node,DeploymentId),
+
+    %% Create dir and clone
+    rpc:call(Node,file,del_dir_r,[Dir],5000), 
+    ok=rpc:call(Node,file,make_dir,[Dir],5000),
+    CloneCmd="git clone "++GitPath++" "++Dir,
+    CloneResult=rpc:call(Node,os,cmd,[CloneCmd],2*5000),
+    true=?LOG_NOTICE("CloneResult",[CloneResult]),
+    Ebin=filename:join(Dir,"ebin"),
+    true=rpc:call(Node,code,add_patha,[Ebin],5000),
+    ok=rpc:call(Node,application,load,[App],5000),
+    
+    ok.
+%%--------------------------------------------------------------------
+%% @doc
+%% @spec
+%% @end
+%%--------------------------------------------------------------------
+unload_appl(DeploymentId)->
+    {ok,ProviderSpec}=db_deploy:read(provider_spec,DeploymentId),
+    {ok,HostSpec}=db_deploy:read(host_spec,DeploymentId),
+    {ok,Dir}=db_deploy:read(dir,DeploymentId),
+    {ok,App}=db_provider_spec:read(app,ProviderSpec),
+    {ok,Node}=db_deploy:read(node,DeploymentId),
+
+    %% stop unload appl and delete dir
+    ok=rpc:call(Node,application,unload,[App],5000),
+    ssh_server:send_msg(HostSpec,"rm -rf "++Dir,5000),
+    
+    ok.
+
+
 
 %%--------------------------------------------------------------------
 %% @doc
@@ -96,11 +138,11 @@ start_vm(DeploymentId)->
     true=check_stopped_node(Node),
     %% ssh start vm    
     CookieStr=atom_to_list(erlang:get_cookie()),
-    {ok,NodeName}=db_deploy:read(nodename,DeploymentId),
+    {ok,NodeName}=db_deploy:read(node_name,DeploymentId),
     {ok,HostSpec}=db_deploy:read(host_spec,DeploymentId),
-    LinuxCmd=" -sname "++NodeName++" "++" -setcookie "++CookieStr++" "++" -detached ",
+    LinuxCmd="erl -sname "++NodeName++" "++" -setcookie "++CookieStr++" "++" -detached ",
     TimeOut=2*5000,
-    ssh_server:send_msg(HostSpec,LinuxCmd,TimeOut),
+    {ok,[]}=ssh_server:send_msg(HostSpec,LinuxCmd,TimeOut),
     check_started_node(Node).
 
 %%--------------------------------------------------------------------
