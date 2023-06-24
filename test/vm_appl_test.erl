@@ -32,8 +32,11 @@ start()->
     {ok,DeploymentId}=create_deployment(),
     ok=start_vm(DeploymentId),
     ok=load_appl(DeploymentId),
+    ok=start_appl(DeploymentId),
+    ok=good_adder_test_app(DeploymentId),
     
-    
+    ok=stop_appl(DeploymentId),
+    ok=failed_adder_test_app(DeploymentId),
     ok=unload_appl(DeploymentId),
     ok=stop_vm(DeploymentId),
     ok=delete_deployment(DeploymentId),
@@ -41,7 +44,48 @@ start()->
   
     ok.
 
-
+%%--------------------------------------------------------------------
+%% @doc
+%% @spec
+%% @end
+%%--------------------------------------------------------------------
+good_adder_test_app(DeploymentId)->
+      io:format("Start ~p~n",[{?MODULE,?FUNCTION_NAME,?LINE}]),
+    {ok,ProviderSpec}=db_deploy:read(provider_spec,DeploymentId),
+    {ok,Adder}=db_provider_spec:read(app,ProviderSpec),
+    {ok,Node}=db_deploy:read(node,DeploymentId),
+    42=rpc:call(Node,Adder,add,[20,22],5000),
+    ok.
+%%--------------------------------------------------------------------
+%% @doc
+%% @spec
+%% @end
+%%--------------------------------------------------------------------
+failed_adder_test_app(DeploymentId)->
+      io:format("Start ~p~n",[{?MODULE,?FUNCTION_NAME,?LINE}]),
+    {ok,ProviderSpec}=db_deploy:read(provider_spec,DeploymentId),
+    {ok,Adder}=db_provider_spec:read(app,ProviderSpec),
+    {ok,Node}=db_deploy:read(node,DeploymentId),
+    {badrpc,{'EXIT',{noproc,{gen_server,call,[adder,{add,20,22},infinity]}}}}=rpc:call(Node,Adder,add,[20,22],5000),
+    ok.
+%%--------------------------------------------------------------------
+%% @doc
+%% @spec
+%% @end
+%%--------------------------------------------------------------------
+start_appl(DeploymentId)->
+    io:format("Start ~p~n",[{?MODULE,?FUNCTION_NAME,?LINE}]),
+    ok=vm_appl_control:start_appl(DeploymentId),
+    ok.
+%%--------------------------------------------------------------------
+%% @doc
+%% @spec
+%% @end
+%%--------------------------------------------------------------------
+stop_appl(DeploymentId)->
+     io:format("Start ~p~n",[{?MODULE,?FUNCTION_NAME,?LINE}]),
+    ok=vm_appl_control:stop_appl(DeploymentId),
+    ok.
 %%--------------------------------------------------------------------
 %% @doc
 %% @spec
@@ -122,11 +166,12 @@ start_vm(DeploymentId)->
 %%--------------------------------------------------------------------
 create_deployment()->
     io:format("Start ~p~n",[{?MODULE,?FUNCTION_NAME,?LINE}]),
+    DeploymentSpec="test_1",
     ProviderSpec="adder",
     HostSpec="c50",
     Type="na",
     UniqueStr=?UniqueStr,
-    {ok,DeploymentId}=vm_appl_control:create_deployment(ProviderSpec,HostSpec,Type,UniqueStr),
+    {ok,DeploymentId}=vm_appl_control:create_deployment(DeploymentSpec,ProviderSpec,HostSpec,Type,UniqueStr),
     {ok,ProviderSpec}=db_deploy:read(provider_spec,DeploymentId),
     {ok,?UniqueStr}=db_deploy:read(node_name,DeploymentId),
     {ok,'unique1@c50'}=db_deploy:read(node,DeploymentId),

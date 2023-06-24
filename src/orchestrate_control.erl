@@ -7,7 +7,7 @@
 %%% 
 %%% Created : 10 dec 2012
 %%% -------------------------------------------------------------------
--module(vm_appl_control).
+-module(orchestrate_control).
  
  
 %% --------------------------------------------------------------------
@@ -20,19 +20,14 @@
 -export([
 	 create_deployment/3,
 	 create_deployment/4,
-	 create_deployment/5,
 	 delete_deployment/1,
 
-	 is_vm_started/1,
-	
 	 start_vm/1,
 	 stop_vm/1,
 
 %	 create_dir/1,
 	 load_appl/1,
-%	 is_appl_loaded/1,
 	 start_appl/1,
-%	 is_appl_started/1,
 	 stop_appl/1,
 	 unload_appl/1,
 %	 delete_dir/1
@@ -122,22 +117,19 @@ unload_appl(DeploymentId)->
 %% @spec
 %% @end
 %%--------------------------------------------------------------------
-create_deployment(DeploymentSpec,ProviderSpec,HostSpec)->
-    Type="provider",
-    create_deployment(DeploymentSpec,ProviderSpec,HostSpec,Type).
-create_deployment(DeploymentSpec,ProviderSpec,HostSpec,Type)->
+create_deployment(ProviderSpec,HostSpec,Type)->
     {ok,AppName}=db_provider_spec:read(app_name,ProviderSpec),
     {ok,Unique}=unique_node_name(AppName,Type),
-    create_deployment(DeploymentSpec,ProviderSpec,HostSpec,Type,Unique).
+    create_deployment(ProviderSpec,HostSpec,Type,Unique).
 
-create_deployment(DeploymentSpec,ProviderSpec,HostSpec,_Type,Unique)->
+create_deployment(ProviderSpec,HostSpec,_Type,Unique)->
     DeploymentId=Unique,
     NodeName=Unique,
     Dir=Unique,
     {ok,HostName}=db_host_spec:read(hostname,HostSpec),
     Node=list_to_atom(Unique++"@"++HostName),
     CreationTime={date(),time()},
-    {atomic,ok}=db_deploy:create(DeploymentId,DeploymentSpec,ProviderSpec,NodeName,Dir,Node,HostSpec,CreationTime),
+    {atomic,ok}=db_deploy:create(DeploymentId,ProviderSpec,NodeName,Dir,Node,HostSpec,CreationTime),
     {ok,DeploymentId}.
 
 
@@ -175,20 +167,6 @@ start_vm(DeploymentId)->
 %% @spec
 %% @end
 %%--------------------------------------------------------------------
-is_vm_started(DeploymentId)->
-    {ok,Node}=db_deploy:read(node,DeploymentId),
-    case net_adm:ping(Node) of
-	pang->
-	    false;
-	pong->
-	    true
-    end.
-
-%%--------------------------------------------------------------------
-%% @doc
-%% @spec
-%% @end
-%%--------------------------------------------------------------------
 stop_vm(DeploymentId)->
     {ok,Node}=db_deploy:read(node,DeploymentId),
     rpc:call(Node,init,stop,[],5000),
@@ -200,9 +178,9 @@ stop_vm(DeploymentId)->
 
 %%----------------------------------------------------------------------------------------
 is_deployed(DeploymentId)->
-    {ok,Node}=db_deploy:read(node,DeploymentId),
-    {ok,ProviderSpec}=db_deploy:read(provider_spec,DeploymentId),
-    {ok,App}=db_provider_spec:read(app,ProviderSpec),
+    {ok,Node}=sd:call(dbetcd_appl,db_deploy,read,[node,DeploymentId],5000),
+    {ok,ProviderSpec}=sd:call(dbetcd_appl,db_deploy,read,[provider_spec,DeploymentId],5000),
+    {ok,App}=sd:call(dbetcd_appl,db_provider_spec,read,[app,ProviderSpec],5000),
     Result=case net_adm:ping(Node) of
 	       pang->
 		   false;

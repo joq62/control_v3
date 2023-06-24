@@ -48,6 +48,7 @@ test_1()->
     %% create 
     
     DeployId="deploy_id_1",
+    DeploymentSpec="deployment_spec_1",
     ProviderSpec="kube_appl",
     NodeName=DeployId,
     Node=list_to_atom(NodeName++"@"++"host1"),
@@ -55,10 +56,10 @@ test_1()->
     HostSpec="host_1",
     CreationTime={date(),time()},
     false=db_deploy:member(DeployId),
-    {atomic,ok}=db_deploy:create(DeployId,ProviderSpec,NodeName,Dir,Node,HostSpec,CreationTime),
+    {atomic,ok}=db_deploy:create(DeployId,DeploymentSpec,ProviderSpec,NodeName,Dir,Node,HostSpec,CreationTime),
     true=db_deploy:member(DeployId),
     {
-     DeployId,ProviderSpec,NodeName,Dir,Node,HostSpec,{_,_}
+     DeployId,DeploymentSpec,ProviderSpec,NodeName,Dir,Node,HostSpec,{_,_}
     }=db_deploy:read(DeployId),
     
     {atomic,ok}=db_deploy:delete(DeployId),

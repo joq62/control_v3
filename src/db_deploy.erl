@@ -14,7 +14,7 @@
 %% External exports
 
 -export([create_table/0,create_table/2,add_node/2]).
--export([create/7,delete/1]).
+-export([create/8,delete/1]).
 -export([read_all/0,read/1,read/2,get_all_id/0]).
 -export([do/1]).
 -export([member/1]).
@@ -57,9 +57,10 @@ add_node(Node,StorageType)->
 %% @end
 %%--------------------------------------------------------------------
 
-create(Id,ProviderSpec,NodeName,Dir,Node,HostSpec,CreationTime)->
+create(Id,DeploymentSpec,ProviderSpec,NodeName,Dir,Node,HostSpec,CreationTime)->
     Record=#?RECORD{
 		    id=Id,
+		    deployment_spec=DeploymentSpec,
 		    provider_spec=ProviderSpec,
 		    node_name=NodeName,
 		    node=Node,
@@ -105,7 +106,7 @@ member(Id)->
 %%--------------------------------------------------------------------
 read_all() ->
     Z=do(qlc:q([X || X <- mnesia:table(?TABLE)])),
-    [{R#?RECORD.id,R#?RECORD.provider_spec,R#?RECORD.node_name,
+    [{R#?RECORD.id,R#?RECORD.deployment_spec,R#?RECORD.provider_spec,R#?RECORD.node_name,
       R#?RECORD.dir,R#?RECORD.node, R#?RECORD.host_spec,R#?RECORD.creation_time}||R<-Z].
 
 read(Id)->
@@ -115,7 +116,7 @@ read(Id)->
 	       []->
 		  [];
 	       _->
-		   [Info]=[{R#?RECORD.id,R#?RECORD.provider_spec,R#?RECORD.node_name,
+		   [Info]=[{R#?RECORD.id,R#?RECORD.deployment_spec,R#?RECORD.provider_spec,R#?RECORD.node_name,
 			    R#?RECORD.dir,R#?RECORD.node, R#?RECORD.host_spec,R#?RECORD.creation_time}||R<-Z],
 		   Info
 	   end,
@@ -131,6 +132,8 @@ read(Key,Id)->
 		   case  Key of
 		       id->
 			   {ok,R#?RECORD.id};
+		       deployment_spec->
+			   {ok,R#?RECORD.deployment_spec};
 		       provider_spec->
 			   {ok,R#?RECORD.provider_spec};
 		       node_name->

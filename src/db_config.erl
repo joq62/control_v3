@@ -39,13 +39,15 @@ start()->
     Ok_HostSpec=[X||{ok,X}<-HostSpecList],
     Err_HostSpec=[X||{error,X}<-HostSpecList],
 
-%    ok=db_deployment_spec:create_table(),
-%    DeploySpecList=db_deployment_spec:git_clone_load(),
-  %  Ok_DeploySpec=[X||{ok,X}<-DeploySpecList],
-  %  Err_DeploySpec=[X||{error,X}<-DeploySpecList],
+    
+    ok=db_deployment_spec:create_table(),    
+    DeploySpecList=db_deployment_spec:git_clone_load(),
+    Ok_DeploySpec=[X||{ok,X}<-DeploySpecList],
+    Err_DeploySpec=[X||{error,X}<-DeploySpecList],
 
+    ok=db_deploy:create_table(),    
     ok=db_lock:create_table(),
-    ok=db_deploy:create_table(),
+    
     
     Test=lists:append([Ok_ProviderSpec,Ok_HostSpec,
 		       Err_ProviderSpec,Err_HostSpec]),

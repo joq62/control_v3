@@ -37,7 +37,11 @@ start()->
     ok=dist_test:start(),
                  
     %% 
-    ok=vm_appl_test:start(),
+    ok=vm_appl_test:start(), 
+
+    %% Orchestrate
+    ok=orchestrate_test:start(),
+
 
     io:format("Test OK !!! ~p~n",[?MODULE]),
     timer:sleep(2000),
