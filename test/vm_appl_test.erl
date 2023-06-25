@@ -171,11 +171,12 @@ create_deployment()->
     HostSpec="c50",
     Type="na",
     UniqueStr=?UniqueStr,
+    Dir=UniqueStr++"."++"provider_dir",
     {ok,DeploymentId}=vm_appl_control:create_deployment(DeploymentSpec,ProviderSpec,HostSpec,Type,UniqueStr),
     {ok,ProviderSpec}=db_deploy:read(provider_spec,DeploymentId),
     {ok,?UniqueStr}=db_deploy:read(node_name,DeploymentId),
     {ok,'unique1@c50'}=db_deploy:read(node,DeploymentId),
-    {ok,UniqueStr}=db_deploy:read(dir,DeploymentId),
+    {ok,Dir}=db_deploy:read(dir,DeploymentId),
     {ok,HostSpec}=db_deploy:read(host_spec,DeploymentId),
     
     {

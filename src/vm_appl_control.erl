@@ -22,7 +22,6 @@
 	 create_deployment/4,
 	 create_deployment/5,
 	 delete_deployment/1,
-
 	 is_vm_started/1,
 	
 	 start_vm/1,
@@ -35,7 +34,7 @@
 %	 is_appl_started/1,
 	 stop_appl/1,
 	 unload_appl/1,
-%	 delete_dir/1
+	 delete_dir/1,
 	 
 	 check_stopped_node/1,
 	 check_started_node/1
@@ -133,7 +132,7 @@ create_deployment(DeploymentSpec,ProviderSpec,HostSpec,Type)->
 create_deployment(DeploymentSpec,ProviderSpec,HostSpec,_Type,Unique)->
     DeploymentId=Unique,
     NodeName=Unique,
-    Dir=Unique,
+    Dir=Unique++"."++"provider_dir",
     {ok,HostName}=db_host_spec:read(hostname,HostSpec),
     Node=list_to_atom(Unique++"@"++HostName),
     CreationTime={date(),time()},
@@ -147,6 +146,8 @@ create_deployment(DeploymentSpec,ProviderSpec,HostSpec,_Type,Unique)->
 %% @end
 %%--------------------------------------------------------------------
 delete_deployment(DeploymentId)->
+    stop_vm(DeploymentId),
+    delete_dir(DeploymentId),    
     {atomic,ok}=db_deploy:delete(DeploymentId),
     ok.
 
@@ -193,9 +194,19 @@ stop_vm(DeploymentId)->
     {ok,Node}=db_deploy:read(node,DeploymentId),
     rpc:call(Node,init,stop,[],5000),
     check_stopped_node(Node).
-
-
-
+%%--------------------------------------------------------------------
+%% @doc
+%% @spec
+%% @end
+%%--------------------------------------------------------------------
+delete_dir(DeploymentId)->
+    {ok,Dir}=db_deploy:read(dir,DeploymentId),   
+    {ok,HostSpec}=db_deploy:read(host_spec,DeploymentId),
+    Msg="rm -rf "++Dir,
+    TimeOut=5000,
+    ssh_server:send_msg(HostSpec,Msg,TimeOut).
+    
+   
 
 
 %%----------------------------------------------------------------------------------------
