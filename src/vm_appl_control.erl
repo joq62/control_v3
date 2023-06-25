@@ -22,6 +22,8 @@
 	 create_deployment/4,
 	 create_deployment/5,
 	 delete_deployment/1,
+	 start_deployment/1,
+	 restart_deployment/1,
 	 is_vm_started/1,
 	
 	 start_vm/1,
@@ -140,6 +142,39 @@ create_deployment(DeploymentSpec,ProviderSpec,HostSpec,_Type,Unique)->
     {ok,DeploymentId}.
 
 
+%%--------------------------------------------------------------------
+%% @doc
+%% @spec
+%% @end
+%%--------------------------------------------------------------------
+restart_deployment(DeploymentId)->
+    stop_vm(DeploymentId),
+    delete_dir(DeploymentId),  
+    start_deployment(DeploymentId).
+ 
+%%--------------------------------------------------------------------
+%% @doc
+%% @spec
+%% @end
+%%--------------------------------------------------------------------
+start_deployment(DeploymentId)->
+    Result=case start_vm(DeploymentId) of
+	       false->
+		   {error,["Couldnt start vm",DeploymentId]};
+	       true->
+		   case load_appl(DeploymentId) of
+		       {error,Reason}->
+			    {error,["Couldnt load app ",DeploymentId,Reason]};
+		       ok->
+			   case start_appl(DeploymentId) of
+			       {error,Reason}->
+				   {error,["Couldnt start app",DeploymentId,Reason]};
+			       ok->
+				   {ok,DeploymentId}
+			   end
+		   end
+	   end,
+    Result.
 %%--------------------------------------------------------------------
 %% @doc
 %% @spec

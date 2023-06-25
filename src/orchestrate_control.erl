@@ -20,6 +20,7 @@
 -export([
 	 is_wanted_state/0,
 	 start_missing_deployments/0,
+   
 	 delete_deployment/1
 	]).
 
@@ -34,7 +35,9 @@
 %% @end
 %%--------------------------------------------------------------------
 delete_deployment(DeploymentId)->
-   ok.
+    vm_appl_control:delete_deployment(DeploymentId).
+
+
     
 %%--------------------------------------------------------------------
 %% @doc
@@ -68,24 +71,7 @@ get_missing_deployments()->
 %%--------------------------------------------------------------------
 start_missing_deployments()->
     {ok,MissingDeployments}=get_missing_deployments(),
-    [do_start(DeploymentId)||DeploymentId<-MissingDeployments].
+    [vm_appl_control:start_deployment(DeploymentId)||DeploymentId<-MissingDeployments].
 
-do_start(DeploymentId)->
-    Result=case vm_appl_control:start_vm(DeploymentId) of
-	       false->
-		   {error,["Couldnt start vm",DeploymentId]};
-	       true->
-		   case vm_appl_control:load_appl(DeploymentId) of
-		       {error,Reason}->
-			    {error,["Couldnt load app ",DeploymentId,Reason]};
-		       ok->
-			   case vm_appl_control:start_appl(DeploymentId) of
-			       {error,Reason}->
-				   {error,["Couldnt start app",DeploymentId,Reason]};
-			       ok->
-				   {ok,DeploymentId}
-			   end
-		   end
-	   end,
-    Result.
+
     

@@ -35,6 +35,15 @@ start()->
     ok=delete_deployments(),
     []=db_deploy:get_all_id(),
     true=orchestrate_control:is_wanted_state(),
+
+    %
+    ok=store_deployments(),
+    false=orchestrate_control:is_wanted_state(),
+    ok=start_missing(),
+    true=orchestrate_control:is_wanted_state(),
+    ok=sd_check(),
+
+    ok=monkey_test:start(),
     io:format("Test OK !!! ~p~n",[?MODULE]),
   
     ok.
