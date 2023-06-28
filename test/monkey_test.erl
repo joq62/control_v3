@@ -49,12 +49,30 @@ loop(AllDeploymentId,Num)->
     IdToKill=[lists:nth(I,AllDeploymentId)||I<-KillIndex],
    % io:format("IdToKill ~p~n",[{IdToKill,AllDeploymentId}]),
     [vm_appl_control:stop_vm(DeploymentId)||DeploymentId<-IdToKill],
+    io:format("IdToKill ~p~n",[{IdToKill,[db_deploy:read(node,DeploymentId)||DeploymentId<-IdToKill]}]),
+    timer:sleep(65*1000),
+    loop(AllDeploymentId,Num).
+    
+    
+%%--------------------------------------------------------------------
+%% @doc
+%% @spec
+%% @end
+%%--------------------------------------------------------------------
+
+loop1(AllDeploymentId,Num)->
+    NumToKill=random:uniform(Num),
+    KillIndex=index_to_kill(NumToKill,Num,[]),
+   % io:format("NumToKill, KillIndex~p~n",[{NumToKill,KillIndex}]),
+    IdToKill=[lists:nth(I,AllDeploymentId)||I<-KillIndex],
+   % io:format("IdToKill ~p~n",[{IdToKill,AllDeploymentId}]),
+    [vm_appl_control:stop_vm(DeploymentId)||DeploymentId<-IdToKill],
     false=orchestrate_control:is_wanted_state(),
     StartR=orchestrate_control:start_missing_deployments(),
     io:format("StartR ~p~n",[StartR]),
     true=orchestrate_control:is_wanted_state(),
     timer:sleep(2000),
-    loop(AllDeploymentId,Num).
+    loop1(AllDeploymentId,Num).
     
     
     

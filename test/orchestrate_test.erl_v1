@@ -27,15 +27,38 @@ start()->
     ok=setup(),
     ok=check_deployments(),
     ok=store_deployments(),
-    {ok,MissingDeployments}=get_missing_deployments(),
-    ok=start_missing(MissingDeployments),
-    {ok,[]}=get_missing_deployments(),
+    false=orchestrate_control:is_wanted_state(),
+    ok=start_missing(),
+    true=orchestrate_control:is_wanted_state(),
     ok=sd_check(),
 
+    ok=delete_deployments(),
+    []=db_deploy:get_all_id(),
+    true=orchestrate_control:is_wanted_state(),
+
+    %
+    ok=store_deployments(),
+    false=orchestrate_control:is_wanted_state(),
+    ok=start_missing(),
+    true=orchestrate_control:is_wanted_state(),
+    ok=sd_check(),
+
+    ok=monkey_test:start(),
     io:format("Test OK !!! ~p~n",[?MODULE]),
   
     ok.
 
+%%--------------------------------------------------------------------
+%% @doc
+%% @spec
+%% @end
+%%--------------------------------------------------------------------
+delete_deployments()->
+    io:format("Start ~p~n",[{?MODULE,?FUNCTION_NAME,?LINE}]),
+    AllDeployments=db_deploy:get_all_id(),
+    DeleteR=[vm_appl_control:delete_deployment(DeploymentId)||DeploymentId<-AllDeployments],
+    io:format("DeleteR  ~p~n",[DeleteR]),
+    ok.
 
 %%--------------------------------------------------------------------
 %% @doc
@@ -57,37 +80,15 @@ sd_check()->
 %% @spec
 %% @end
 %%--------------------------------------------------------------------
-start_missing(MissingDeployments)->
+start_missing()->
      io:format("Start ~p~n",[{?MODULE,?FUNCTION_NAME,?LINE}]),
     
-    [do_start(DeploymentId)||DeploymentId<-MissingDeployments],
-    io:format("nodes ~p~n",[nodes()]),
+    StartR=orchestrate_control:start_missing_deployments(),
     
+    io:format("StartR ~p~n",[StartR]),
     ok.
 
-do_start(DeploymentId)->
-    true=vm_appl_control:start_vm(DeploymentId),
-    ok=vm_appl_control:load_appl(DeploymentId),
-    ok=vm_appl_control:start_appl(DeploymentId),
-    ok.
-    
-    
-    
-
-
-%%--------------------------------------------------------------------
-%% @doc
-%% @spec
-%% @end
-%%--------------------------------------------------------------------
-get_missing_deployments()->
-     io:format("Start ~p~n",[{?MODULE,?FUNCTION_NAME,?LINE}]),
-    
-    Missing=[DeploymentId||DeploymentId<-db_deploy:get_all_id(),
-		   false==vm_appl_control:is_deployed(DeploymentId)],
-    io:format("Missing ~p~n",[Missing]),
-    
-    {ok,Missing}.
+   
 %%--------------------------------------------------------------------
 %% @doc
 %% @spec
@@ -117,8 +118,8 @@ check_deployments()->
     true=lists:member(?DeploymentSpec,DeploymentList),
     {ok,Deployment}=db_deployment_spec:read(deployment,?DeploymentSpec),
     [
-     {"adder","c50"},{"adder","c50"},{"adder","c50"},
-     {"divi","c50"},{"divi","c50"}
+     {"adder","c200"},{"adder","c201"},{"adder","c50"},{"adder","c50"},{"adder","c50"},
+     {"divi","c200"},{"divi","c201"},{"divi","c50"},{"divi","c50"}
     ]=lists:sort(Deployment),
     ok.
 

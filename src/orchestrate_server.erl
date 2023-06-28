@@ -6,7 +6,7 @@
 %%% @end
 %%% Created : 28 Jun 2023 by c50 <joq62@c50>
 %%%-------------------------------------------------------------------
--module(orchestrate_control).
+-module(orchestrate_server).
 
 -behaviour(gen_server).
 %% --------------------------------------------------------------------
@@ -15,14 +15,12 @@
 -include("log.api").
 %% --------------------------------------------------------------------
 
--define(OrchestrateTimeOut,30*1000).
 
 %% API
 -export([
 	 is_wanted_state/0,
 	 start_missing_deployments/0,
 	 delete_deployment/1,
-	 orchestrate/1,
 	 ping/0
 	]).
 
@@ -60,14 +58,6 @@ ping()->
 
 %%--------------------------------------------------------------------
 %% @doc
-%% @spec
-%% @end
-%%--------------------------------------------------------------------
-orchestrate(Result)->
-    gen_server:cast(?SERVER, {orchestrate,Result}). 
-
-%%--------------------------------------------------------------------
-%% @doc
 %% Starts the server
 %% @end
 %%--------------------------------------------------------------------
@@ -95,7 +85,6 @@ start_link() ->
 	  ignore.
 init([]) ->
     true=?LOG_NOTICE("Server started",[]),
-    rpc:cast(node(),orchestrate_lib,orchestrate,[?OrchestrateTimeOut]),
     process_flag(trap_exit, true),
     {ok, #state{}}.
 
@@ -115,15 +104,27 @@ init([]) ->
 	  {stop, Reason :: term(), Reply :: term(), NewState :: term()} |
 	  {stop, Reason :: term(), NewState :: term()}.
 handle_call({is_wanted_state}, _From, State) ->
-    Reply=rpc:call(node(),orchestrate_lib,is_wanted_state,[],2*5000),
+     Missing=[DeploymentId||DeploymentId<-db_deploy:get_all_id(),
+			   false==vm_appl_control:is_deployed(DeploymentId)],
+    Reply=case Missing of
+	      []->
+		  true;
+	      _ ->
+		  false
+	  end,
     {reply, Reply, State};
 
 handle_call({start_missing_deployments}, _From, State) ->
-    Reply=rpc:call(node(),orchestrate_lib,start_missing_deployments,[],10*5000),
+    Reply=case get_missing_deployments() of
+	      {badrpc,Reason}->
+		  {error,[badrpc,Reason,?MODULE,?LINE]};
+	      {ok,MissingDeployments}->
+		  [rpc:call(node(),vm_appl_control,start_deployment,[DeploymentId],3*5000)||DeploymentId<-MissingDeployments]
+	  end,
     {reply, Reply, State};
 
 handle_call({delete_deployment,DeploymentId}, _From, State) ->
-    Reply=rpc:call(node(),orchestrate_lib,delete_deployment,[DeploymentId],5000),
+    Reply=rpc:call(node(),vm_appl_control,delete_deployment,[DeploymentId],5000),
     {reply, Reply, State};
 
 handle_call({ping}, _From, State) ->
@@ -145,14 +146,6 @@ handle_call(Request, From, State) ->
 	  {noreply, NewState :: term(), Timeout :: timeout()} |
 	  {noreply, NewState :: term(), hibernate} |
 	  {stop, Reason :: term(), NewState :: term()}.
-
-handle_cast({orchestrate,Result}, State) ->
-    io:format("Result ~p~n",[{Result,?MODULE,?LINE}]),
-    io:format("is_wanted_state ~p~n",[{rpc:call(node(),orchestrate_lib,is_wanted_state,[],2*5000),?MODULE,?LINE}]),
-    
-    rpc:cast(node(),orchestrate_lib,orchestrate,[?OrchestrateTimeOut]),
-    {noreply, State};
-
 handle_cast(_Request, State) ->
     {noreply, State}.
 
@@ -218,5 +211,8 @@ format_status(_Opt, Status) ->
 %% @spec
 %% @end
 %%--------------------------------------------------------------------
-
+get_missing_deployments()->
+    Missing=[DeploymentId||DeploymentId<-db_deploy:get_all_id(),
+		   false==vm_appl_control:is_deployed(DeploymentId)],    
+    {ok,Missing}.
 		   

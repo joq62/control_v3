@@ -64,6 +64,7 @@ start_appl(DeploymentId)->
     {ok,App}=db_provider_spec:read(app,ProviderSpec),
     {ok,Node}=db_deploy:read(node,DeploymentId),
     rpc:call(Node,application,start,[App],3*5000).
+	    
 %%--------------------------------------------------------------------
 %% @doc
 %% @spec
@@ -170,6 +171,7 @@ start_deployment(DeploymentId)->
 			       {error,Reason}->
 				   {error,["Couldnt start app",DeploymentId,Reason]};
 			       ok->
+				   ?LOG_NOTICE("Deployment started",[DeploymentId]),
 				   {ok,DeploymentId}
 			   end
 		   end
@@ -204,8 +206,13 @@ start_vm(DeploymentId)->
     LinuxCmd="erl -sname "++NodeName++" "++" -setcookie "++CookieStr++" "++" -detached ",
     TimeOut=2*5000,
     {ok,[]}=ssh_server:send_msg(HostSpec,LinuxCmd,TimeOut),
-    check_started_node(Node).
-
+    case check_started_node(Node) of
+	true->
+	    ?LOG_NOTICE("Vm started",[Node,DeploymentId]),
+	    true;
+	false ->
+	    false
+    end.
 %%--------------------------------------------------------------------
 %% @doc
 %% @spec
@@ -342,7 +349,7 @@ check_started_node(0,_Node,Boolean) ->
   %  io:format("Dbg calling node,Node ~p~n",[{node(),Node,?MODULE,?FUNCTION_NAME,?LINE}]),
     Boolean;
 check_started_node(N,Node,_) ->
-    io:format("Dbg calling node,Node ~p~n",[{node(),Node,erlang:get_cookie(),?MODULE,?FUNCTION_NAME,?LINE}]),
+ %   io:format("Dbg calling node,Node ~p~n",[{node(),Node,erlang:get_cookie(),?MODULE,?FUNCTION_NAME,?LINE}]),
     Boolean=case net_adm:ping(Node) of
 		pang->
 		    timer:sleep(100),

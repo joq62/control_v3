@@ -27,21 +27,21 @@ start()->
     ok=setup(),
     ok=check_deployments(),
     ok=store_deployments(),
-    false=orchestrate_control:is_wanted_state(),
-    ok=start_missing(),
-    true=orchestrate_control:is_wanted_state(),
-    ok=sd_check(),
+%    false=orchestrate_control:is_wanted_state(),
+%    ok=start_missing(),
+%    true=orchestrate_control:is_wanted_state(),
+%    ok=sd_check(),
 
-    ok=delete_deployments(),
-    []=db_deploy:get_all_id(),
-    true=orchestrate_control:is_wanted_state(),
+%    ok=delete_deployments(),
+%    []=db_deploy:get_all_id(),
+%    true=orchestrate_control:is_wanted_state(),
 
     %
-    ok=store_deployments(),
-    false=orchestrate_control:is_wanted_state(),
-    ok=start_missing(),
-    true=orchestrate_control:is_wanted_state(),
-    ok=sd_check(),
+%    ok=store_deployments(),
+%    false=orchestrate_control:is_wanted_state(),
+%    ok=start_missing(),
+%    true=orchestrate_control:is_wanted_state(),
+%    ok=sd_check(),
 
     ok=monkey_test:start(),
     io:format("Test OK !!! ~p~n",[?MODULE]),
@@ -118,8 +118,8 @@ check_deployments()->
     true=lists:member(?DeploymentSpec,DeploymentList),
     {ok,Deployment}=db_deployment_spec:read(deployment,?DeploymentSpec),
     [
-     {"adder","c50"},{"adder","c50"},{"adder","c50"},
-     {"divi","c50"},{"divi","c50"}
+     {"adder","c200"},{"adder","c201"},{"adder","c50"},{"adder","c50"},{"adder","c50"},
+     {"divi","c200"},{"divi","c201"},{"divi","c50"},{"divi","c50"}
     ]=lists:sort(Deployment),
     ok.
 

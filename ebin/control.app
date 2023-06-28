@@ -8,6 +8,7 @@
               {modules,[cmn_appl,control,control_app,control_sup,db_config,
                         db_deploy,db_deployment_spec,db_host_spec,db_lock,
                         db_provider_spec,dbetcd,lib_db,orchestrate_control,
-                        ssh_controller,vm_appl_control]},
+                        orchestrate_lib,orchestrate_server,ssh_controller,
+                        vm_appl_control]},
               {licenses,["Apache-2.0"]},
               {links,[]}]}.
