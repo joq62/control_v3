@@ -60,9 +60,9 @@
 %% @end
 %%--------------------------------------------------------------------
 start_appl(DeploymentId)->
-    {ok,ProviderSpec}=db_deploy:read(provider_spec,DeploymentId),
-    {ok,App}=db_provider_spec:read(app,ProviderSpec),
-    {ok,Node}=db_deploy:read(node,DeploymentId),
+    {ok,ProviderSpec}=sd:call(etcd,db_deploy,read,[provider_spec,DeploymentId],5000),
+    {ok,App}=sd:call(etcd,db_provider_spec,read,[app,ProviderSpec],5000),
+    {ok,Node}=sd:call(etcd,db_deploy,read,[node,DeploymentId],5000),
     rpc:call(Node,application,start,[App],3*5000).
 	    
 %%--------------------------------------------------------------------
@@ -71,9 +71,9 @@ start_appl(DeploymentId)->
 %% @end
 %%--------------------------------------------------------------------
 stop_appl(DeploymentId)->
-    {ok,ProviderSpec}=db_deploy:read(provider_spec,DeploymentId),
-    {ok,App}=db_provider_spec:read(app,ProviderSpec),
-    {ok,Node}=db_deploy:read(node,DeploymentId),
+    {ok,ProviderSpec}=sd:call(etcd,db_deploy,read,[provider_spec,DeploymentId],5000),
+    {ok,App}=sd:call(etcd,db_provider_spec,read,[app,ProviderSpec],5000),
+    {ok,Node}=sd:call(etcd,db_deploy,read,[node,DeploymentId],5000),
     rpc:call(Node,application,stop,[App],3*5000).
     
 %%--------------------------------------------------------------------
@@ -82,11 +82,11 @@ stop_appl(DeploymentId)->
 %% @end
 %%--------------------------------------------------------------------
 load_appl(DeploymentId)->
-    {ok,ProviderSpec}=db_deploy:read(provider_spec,DeploymentId),
-    {ok,GitPath}=db_provider_spec:read(git_path,ProviderSpec),
-    {ok,App}=db_provider_spec:read(app,ProviderSpec),
-    {ok,Dir}=db_deploy:read(dir,DeploymentId),
-    {ok,Node}=db_deploy:read(node,DeploymentId),
+    {ok,ProviderSpec}=sd:call(etcd,db_deploy,read,[provider_spec,DeploymentId],5000),
+    {ok,GitPath}=sd:call(etcd,db_provider_spec,read,[git_path,ProviderSpec],5000),
+    {ok,App}=sd:call(etcd,db_provider_spec,read,[app,ProviderSpec],5000),
+    {ok,Dir}=sd:call(etcd,db_deploy,read,[dir,DeploymentId],5000),
+    {ok,Node}=sd:call(etcd,db_deploy,read,[node,DeploymentId],5000),
 
     %% Create dir and clone
     rpc:call(Node,file,del_dir_r,[Dir],5000), 
@@ -105,11 +105,11 @@ load_appl(DeploymentId)->
 %% @end
 %%--------------------------------------------------------------------
 unload_appl(DeploymentId)->
-    {ok,ProviderSpec}=db_deploy:read(provider_spec,DeploymentId),
-    {ok,HostSpec}=db_deploy:read(host_spec,DeploymentId),
-    {ok,Dir}=db_deploy:read(dir,DeploymentId),
-    {ok,App}=db_provider_spec:read(app,ProviderSpec),
-    {ok,Node}=db_deploy:read(node,DeploymentId),
+    {ok,ProviderSpec}=sd:call(etcd,db_deploy,read,[provider_spec,DeploymentId],5000),
+    {ok,HostSpec}=sd:call(etcd,db_deploy,read,[host_spec,DeploymentId],5000),
+    {ok,Dir}=sd:call(etcd,db_deploy,read,[dir,DeploymentId],5000),
+    {ok,App}=sd:call(etcd,db_provider_spec,read,[app,ProviderSpec],5000),
+    {ok,Node}=sd:call(etcd,db_deploy,read,[node,DeploymentId],5000),
 
     %% stop unload appl and delete dir
     ok=rpc:call(Node,application,unload,[App],5000),
@@ -128,7 +128,7 @@ create_deployment(DeploymentSpec,ProviderSpec,HostSpec)->
     Type="provider",
     create_deployment(DeploymentSpec,ProviderSpec,HostSpec,Type).
 create_deployment(DeploymentSpec,ProviderSpec,HostSpec,Type)->
-    {ok,AppName}=db_provider_spec:read(app_name,ProviderSpec),
+    {ok,AppName}=sd:call(etcd,db_provider_spec,read,[app_name,ProviderSpec],5000),
     {ok,Unique}=unique_node_name(AppName,Type),
     create_deployment(DeploymentSpec,ProviderSpec,HostSpec,Type,Unique).
 
@@ -136,10 +136,10 @@ create_deployment(DeploymentSpec,ProviderSpec,HostSpec,_Type,Unique)->
     DeploymentId=Unique,
     NodeName=Unique,
     Dir=Unique++"."++"provider_dir",
-    {ok,HostName}=db_host_spec:read(hostname,HostSpec),
+    {ok,HostName}=sd:call(etcd,db_host_spec,read,[hostname,HostSpec],5000),
     Node=list_to_atom(Unique++"@"++HostName),
     CreationTime={date(),time()},
-    {atomic,ok}=db_deploy:create(DeploymentId,DeploymentSpec,ProviderSpec,NodeName,Dir,Node,HostSpec,CreationTime),
+    {atomic,ok}=sd:call(etcd,db_deploy,create,[DeploymentId,DeploymentSpec,ProviderSpec,NodeName,Dir,Node,HostSpec,CreationTime],5000),
     {ok,DeploymentId}.
 
 
@@ -185,7 +185,7 @@ start_deployment(DeploymentId)->
 delete_deployment(DeploymentId)->
     stop_vm(DeploymentId),
     delete_dir(DeploymentId),    
-    {atomic,ok}=db_deploy:delete(DeploymentId),
+    {atomic,ok}=sd:call(etcd,db_deploy,delete,[DeploymentId],5000),
     ok.
 
 %%--------------------------------------------------------------------
@@ -196,13 +196,13 @@ delete_deployment(DeploymentId)->
 start_vm(DeploymentId)->
  
     %% Ensure Node  stopped
-    {ok,Node}=db_deploy:read(node,DeploymentId),
+    {ok,Node}=sd:call(etcd,db_deploy,read,[node,DeploymentId],5000),
     rpc:call(Node,init,stop,[],5000),
     true=check_stopped_node(Node),
     %% ssh start vm    
     CookieStr=atom_to_list(erlang:get_cookie()),
-    {ok,NodeName}=db_deploy:read(node_name,DeploymentId),
-    {ok,HostSpec}=db_deploy:read(host_spec,DeploymentId),
+    {ok,NodeName}=sd:call(etcd,db_deploy,read,[node_name,DeploymentId],5000),
+    {ok,HostSpec}=sd:call(etcd,db_deploy,read,[host_spec,DeploymentId],5000),
     LinuxCmd="erl -sname "++NodeName++" "++" -setcookie "++CookieStr++" "++" -detached ",
     TimeOut=2*5000,
     {ok,[]}=ssh_server:send_msg(HostSpec,LinuxCmd,TimeOut),
@@ -219,7 +219,7 @@ start_vm(DeploymentId)->
 %% @end
 %%--------------------------------------------------------------------
 is_vm_started(DeploymentId)->
-    {ok,Node}=db_deploy:read(node,DeploymentId),
+    {ok,Node}=sd:call(etcd,db_deploy,read,[node,DeploymentId],5000),
     case net_adm:ping(Node) of
 	pang->
 	    false;
@@ -233,7 +233,7 @@ is_vm_started(DeploymentId)->
 %% @end
 %%--------------------------------------------------------------------
 stop_vm(DeploymentId)->
-    {ok,Node}=db_deploy:read(node,DeploymentId),
+    {ok,Node}=sd:call(etcd,db_deploy,read,[node,DeploymentId],5000),
     rpc:call(Node,init,stop,[],5000),
     check_stopped_node(Node).
 %%--------------------------------------------------------------------
@@ -242,8 +242,8 @@ stop_vm(DeploymentId)->
 %% @end
 %%--------------------------------------------------------------------
 delete_dir(DeploymentId)->
-    {ok,Dir}=db_deploy:read(dir,DeploymentId),   
-    {ok,HostSpec}=db_deploy:read(host_spec,DeploymentId),
+    {ok,Dir}=sd:call(etcd,db_deploy,read,[dir,DeploymentId],5000),   
+    {ok,HostSpec}=sd:call(etcd,db_deploy,read,[host_spec,DeploymentId],5000),
     Msg="rm -rf "++Dir,
     TimeOut=5000,
     ssh_server:send_msg(HostSpec,Msg,TimeOut).
@@ -253,9 +253,9 @@ delete_dir(DeploymentId)->
 
 %%----------------------------------------------------------------------------------------
 is_deployed(DeploymentId)->
-    {ok,Node}=db_deploy:read(node,DeploymentId),
-    {ok,ProviderSpec}=db_deploy:read(provider_spec,DeploymentId),
-    {ok,App}=db_provider_spec:read(app,ProviderSpec),
+    {ok,Node}=sd:call(etcd,db_deploy,read,[node,DeploymentId],5000),
+    {ok,ProviderSpec}=sd:call(etcd,db_deploy,read,[provider_spec,DeploymentId],5000),
+    {ok,App}=sd:call(etcd,db_provider_spec,read,[app,ProviderSpec],5000),
     Result=case net_adm:ping(Node) of
 	       pang->
 		   false;

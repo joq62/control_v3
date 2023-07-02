@@ -13,7 +13,8 @@
 
 -include("log.api").
 %% API
--export([ping/0]).
+-export([
+	 ping/0]).
 
 
 -export([start_link/0]).
@@ -65,9 +66,13 @@ ping()->
 	  {stop, Reason :: term()} |
 	  ignore.
 init([]) ->
-
-    ControlNodes=sd:get_node(control),
-    lib_db:dynamic_db_init(ControlNodes),
+    case application:get_env(first_control) of
+	{ok,false}->
+	    ok;
+	{ok,true} ->
+	    ControlNodes=sd:get_node(control),
+	    lib_db:dynamic_db_init(ControlNodes)
+    end,
     true=?LOG_NOTICE("Server started",[]),
     {ok, #state{}}.
 

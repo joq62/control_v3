@@ -49,6 +49,7 @@ eunit:
 #	Application specific
 	erl -pa ebin -pa test_ebin\
 	    -pa ../log/ebin\
+	    -pa ../etcd/ebin\
 	    -sname do_test\
 	    -run $(m) start\
 	    -setcookie test_cookie

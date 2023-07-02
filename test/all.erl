@@ -31,9 +31,6 @@ start()->
     ok=lib_ssh_test:start(),
     % dbetcd
     ok=deploy_test:start(),
-    ok=lock_test:start(),
-    ok=host_test:start(node()),
-    ok=provider_test:start(node()),
     ok=dist_test:start(),
                  
     %% 
@@ -65,9 +62,10 @@ setup()->
     io:format("Start ~p~n",[{?MODULE,?FUNCTION_NAME}]),
     ok=application:start(log),
     pong=log:ping(),
+    ok=application:start(etcd),
+    pong=etcd:ping(),
 
     ok=application:start(control),
     pong=ssh_server:ping(),
-    pong=dbetcd:ping(),
     pong=control:ping(),
     ok.

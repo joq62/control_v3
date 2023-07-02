@@ -32,8 +32,6 @@ init([]) ->
     ChildSpecs = [
 		  #{id=>lib_ssh,
 		    start=>{ssh_server,start_link,[]}},
-		  #{id=>dbetcd,
-		   start=>{dbetcd,start_link,[]}},
 		  #{id=>orchestrate,
 		    start=>{orchestrate_control,start_link,[]}},
 		  #{id=>control,

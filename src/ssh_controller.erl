@@ -58,7 +58,7 @@
 %% @end
 %%--------------------------------------------------------------------
 create_deployment(ProviderSpec,HostSpec,Type)->
-    {ok,AppName}=db_provider_spec:read(app_name,ProviderSpec),
+    {ok,AppName}=sd:call(etcd,db_provider_spec,read,[app_name,ProviderSpec],5000),
     {ok,Unique}=unique_node_name(AppName,Type),
     create_deployment(ProviderSpec,HostSpec,Type,Unique).
 
@@ -66,10 +66,10 @@ create_deployment(ProviderSpec,HostSpec,_Type,Unique)->
     DeploymentId=Unique,
     NodeName=Unique,
     Dir=Unique,
-    {ok,HostName}=db_host_spec:read(hostname,HostSpec),
+    {ok,HostName}=sd:call(etcd,db_host_spec,read,[hostname,HostSpec],5000),
     Node=list_to_atom(Unique++"@"++HostName),
     CreationTime={date(),time()},
-    {atomic,ok}=db_deploy:create(DeploymentId,ProviderSpec,NodeName,Dir,Node,HostSpec,CreationTime),
+    {atomic,ok}=sd:call(etcd,db_deploy,create,[DeploymentId,ProviderSpec,NodeName,Dir,Node,HostSpec,CreationTime],5000),
     {ok,DeploymentId}.
 
 
@@ -79,7 +79,7 @@ create_deployment(ProviderSpec,HostSpec,_Type,Unique)->
 %% @end
 %%--------------------------------------------------------------------
 delete_deployment(DeploymentId)->
-    {atomic,ok}=db_deploy:delete(DeploymentId),
+    {atomic,ok}=sd:call(etcd,db_deploy,delete,[DeploymentId],5000),
     ok.
 
 %%--------------------------------------------------------------------
@@ -90,13 +90,13 @@ delete_deployment(DeploymentId)->
 start_vm(DeploymentId)->
  
     %% Ensure Node  stopped
-    {ok,Node}=db_deploy:read(node,DeploymentId),
+    {ok,Node}=sd:call(etcd,db_deploy,read,[node,DeploymentId],5000),
     rpc:call(Node,init,stop,[],5000),
     true=check_stopped_node(Node),
     %% ssh start vm    
     CookieStr=atom_to_list(erlang:get_cookie()),
-    {ok,NodeName}=db_deploy:read(nodename,DeploymentId),
-    {ok,HostSpec}=db_deploy:read(host_spec,DeploymentId),
+    {ok,NodeName}=sd:call(etcd,db_deploy,read,[nodename,DeploymentId],5000),
+    {ok,HostSpec}=sd:call(etcd,db_deploy,read,[host_spec,DeploymentId],5000),
     LinuxCmd=" -sname "++NodeName++" "++" -setcookie "++CookieStr++" "++" -detached ",
     TimeOut=2*5000,
     ssh_server:send_msg(HostSpec,LinuxCmd,TimeOut),
@@ -108,7 +108,7 @@ start_vm(DeploymentId)->
 %% @end
 %%--------------------------------------------------------------------
 stop_vm(DeploymentId)->
-    {ok,Node}=db_deploy:read(node,DeploymentId),
+    {ok,Node}=sd:call(etcd,db_deploy,read,[node,DeploymentId],5000),
     rpc:call(Node,init,stop,[],5000),
     check_stopped_node(Node).
 
@@ -118,9 +118,9 @@ stop_vm(DeploymentId)->
 
 %%----------------------------------------------------------------------------------------
 is_deployed(DeploymentId)->
-    {ok,Node}=sd:call(dbetcd_appl,db_deploy,read,[node,DeploymentId],5000),
-    {ok,ProviderSpec}=sd:call(dbetcd_appl,db_deploy,read,[provider_spec,DeploymentId],5000),
-    {ok,App}=sd:call(dbetcd_appl,db_provider_spec,read,[app,ProviderSpec],5000),
+    {ok,Node}=sd:call(etcd,db_deploy,read,[node,DeploymentId],5000),
+    {ok,ProviderSpec}=sd:call(etcd,db_deploy,read,[provider_spec,DeploymentId],5000),
+    {ok,App}=sd:call(etcd,db_provider_spec,read,[app,ProviderSpec],5000),
     Result=case net_adm:ping(Node) of
 	       pang->
 		   false;
