@@ -66,13 +66,6 @@ ping()->
 	  {stop, Reason :: term()} |
 	  ignore.
 init([]) ->
-    case application:get_env(first_control) of
-	{ok,false}->
-	    ok;
-	{ok,true} ->
-	    ControlNodes=sd:get_node(control),
-	    lib_db:dynamic_db_init(ControlNodes)
-    end,
     true=?LOG_NOTICE("Server started",[]),
     {ok, #state{}}.
 
