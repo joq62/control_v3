@@ -147,7 +147,8 @@ handle_call(Request, From, State) ->
 	  {stop, Reason :: term(), NewState :: term()}.
 
 handle_cast({orchestrate,Result}, State) ->
-    io:format("Result ~p~n",[{Result,?MODULE,?LINE}]),
+    true=?LOG_NOTICE("Result ",[Result]),
+ %   io:format("Result ~p~n",[{Result,?MODULE,?LINE}]),
     io:format("is_wanted_state ~p~n",[{rpc:call(node(),orchestrate_lib,is_wanted_state,[],2*5000),?MODULE,?LINE}]),
     
     rpc:cast(node(),orchestrate_lib,orchestrate,[?OrchestrateTimeOut]),
