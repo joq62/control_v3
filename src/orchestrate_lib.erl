@@ -8,6 +8,8 @@
 %%%-------------------------------------------------------------------
 -module(orchestrate_lib).
 
+
+-include("log.api").
 %% API
 -export([
 	 orchestrate/1,
@@ -20,6 +22,7 @@
 %%% API
 %%%===================================================================
 orchestrate(TimeOut)->
+    ?LOG_NOTICE("start ",[]),
     timer:sleep(TimeOut),
     Result=case is_wanted_state() of
 	       true->
@@ -27,7 +30,8 @@ orchestrate(TimeOut)->
 	       false ->
 		   start_missing_deployments()		   
 	   end,
-        rpc:cast(node(),orchestrate_control,orchestrate,[Result]).
+    ?LOG_NOTICE("Result ",[Result]),
+    rpc:cast(node(),orchestrate_control,orchestrate,[Result]).
 
 %%--------------------------------------------------------------------
 %% @doc
