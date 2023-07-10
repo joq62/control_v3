@@ -15,7 +15,7 @@
 -include("log.api").
 %% --------------------------------------------------------------------
 
--define(OrchestrateTimeOut,30*1000).
+-define(OrchestrateTimeOut,60*1000).
 
 %% API
 -export([
