@@ -22,7 +22,7 @@
 %%% API
 %%%===================================================================
 orchestrate(TimeOut)->
-    ?LOG_NOTICE("start ",[]),
+    ?LOG_NOTICE("start ***********************************",[]),
     timer:sleep(TimeOut),
  %   Result=time(),
     Result=case is_wanted_state() of
