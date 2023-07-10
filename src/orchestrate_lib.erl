@@ -29,9 +29,12 @@ orchestrate(TimeOut)->
  %   Result=time(),
     Result=case is_wanted_state() of
 	       true->
+		   ?LOG_NOTICE("True ***********************************",[]),
 		   true;
 	       false ->
-		   start_missing_deployments()		   
+		   ?LOG_NOTICE("false ***********************************",[]),
+		   %start_missing_deployments()	
+		   kuk
 	   end,
     ?LOG_NOTICE("Result ",[Result]),
     rpc:cast(node(),orchestrate_control,orchestrate,[Result]).
