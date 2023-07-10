@@ -22,9 +22,9 @@
 %%% API
 %%%===================================================================
 orchestrate(TimeOut)->
-    ?LOG_NOTICE("start ***********************************",[]),
-    IsWantedState=is_wanted_state(),
-    ?LOG_NOTICE("IsWantedState ***********************************",[IsWantedState]),
+ %   ?LOG_NOTICE("start ***********************************",[]),
+ %   IsWantedState=is_wanted_state(),
+ %   ?LOG_NOTICE("IsWantedState ***********************************",[IsWantedState]),
     timer:sleep(TimeOut),
  %   Result=time(),
     Result=case is_wanted_state() of
@@ -70,8 +70,6 @@ is_wanted_state()->
 %%% Internal functions
 %%%===================================================================
 get_missing_deployments()->
-    ?LOG_NOTICE("get_missing_deployments ***********************************",[]),
     Missing=[DeploymentId||DeploymentId<-sd:call(etcd,db_deploy,get_all_id,[],5000),
 			   false==vm_appl_control:is_deployed(DeploymentId)],
-    ?LOG_NOTICE("Missing ***********************************",[Missing]),
     Missing.
