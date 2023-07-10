@@ -24,13 +24,13 @@
 orchestrate(TimeOut)->
     ?LOG_NOTICE("start ",[]),
     timer:sleep(TimeOut),
-    Result=time(),
-  %  Result=case is_wanted_state() of
-%	       true->
-%		   true;
-%	       false ->
-%		   start_missing_deployments()		   
-%	   end,
+ %   Result=time(),
+    Result=case is_wanted_state() of
+	       true->
+		   true;
+	       false ->
+		   start_missing_deployments()		   
+	   end,
     ?LOG_NOTICE("Result ",[Result]),
     rpc:cast(node(),orchestrate_control,orchestrate,[Result]).
 
