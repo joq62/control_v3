@@ -23,6 +23,8 @@
 %%%===================================================================
 orchestrate(TimeOut)->
     ?LOG_NOTICE("start ***********************************",[]),
+    IsWantedState=is_wanted_state(),
+    ?LOG_NOTICE("IsWantedState ***********************************",[IsWantedState]),
     timer:sleep(TimeOut),
  %   Result=time(),
     Result=case is_wanted_state() of
