@@ -67,6 +67,8 @@ is_wanted_state()->
 %%% Internal functions
 %%%===================================================================
 get_missing_deployments()->
+    ?LOG_NOTICE("get_missing_deployments ***********************************",[]),
     Missing=[DeploymentId||DeploymentId<-sd:call(etcd,db_deploy,get_all_id,[],5000),
 			   false==vm_appl_control:is_deployed(DeploymentId)],
+    ?LOG_NOTICE("Missing ***********************************",[Missing]),
     Missing.
