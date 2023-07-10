@@ -94,9 +94,8 @@ start_link() ->
 	  {stop, Reason :: term()} |
 	  ignore.
 init([]) ->
-    true=?LOG_NOTICE("Server started",[]),
+    ?LOG_NOTICE("Server started",[]),
     rpc:cast(node(),orchestrate_lib,orchestrate,[?OrchestrateTimeOut]),
-    process_flag(trap_exit, true),
     {ok, #state{}}.
 
 %%--------------------------------------------------------------------
