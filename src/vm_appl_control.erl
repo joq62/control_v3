@@ -202,10 +202,12 @@ start_vm(DeploymentId)->
     {ok,Node}=sd:call(etcd,db_deploy,read,[node,DeploymentId],5000),
     rpc:call(Node,init,stop,[],5000),
     true=check_stopped_node(Node),
+    ?LOG_NOTICE("sofar so good  %%%%%%%%%%%%%%%%%%%%% ",[DeploymentId]),
     %% ssh start vm    
     CookieStr=atom_to_list(erlang:get_cookie()),
     {ok,NodeName}=sd:call(etcd,db_deploy,read,[node_name,DeploymentId],5000),
     {ok,HostSpec}=sd:call(etcd,db_deploy,read,[host_spec,DeploymentId],5000),
+    ?LOG_NOTICE("sofar so good  %%%%%%%%%%%%%%%%%%%%% ",[DeploymentId]),
     LinuxCmd="erl -sname "++NodeName++" "++" -setcookie "++CookieStr++" "++" -detached ",
     TimeOut=2*5000,
     case ssh_server:send_msg(HostSpec,LinuxCmd,TimeOut) of 
