@@ -212,6 +212,7 @@ start_vm(DeploymentId)->
     TimeOut=2*5000,
     case ssh_server:send_msg(HostSpec,LinuxCmd,TimeOut) of 
 	{ok,[]}->
+	    ?LOG_NOTICE("sofar so good  %%%%%%%%%%%%%%%%%%%%% ",[DeploymentId]),
 	    case check_started_node(Node) of
 		true->
 		    ?LOG_NOTICE("Vm started",[Node,DeploymentId]),
