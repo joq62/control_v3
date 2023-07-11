@@ -8,5 +8,5 @@
   0},
  {<<"lib_ssh">>,
   {git,"https://github.com/joq62/lib_ssh.git",
-       {ref,"7fa9c7798aa7158adea1f8eadf349204d9b635f7"}},
+       {ref,"8f8def46b6720887ebccbcfe296261360492a707"}},
   0}].

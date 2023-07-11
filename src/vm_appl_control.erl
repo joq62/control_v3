@@ -209,8 +209,13 @@ start_vm(DeploymentId)->
     {ok,HostSpec}=sd:call(etcd,db_deploy,read,[host_spec,DeploymentId],5000),
     ?LOG_NOTICE("sofar so good  %%%%%%%%%%%%%%%%%%%%% ",[DeploymentId]),
     LinuxCmd="erl -sname "++NodeName++" "++" -setcookie "++CookieStr++" "++" -detached ",
+
+    {ok,Ip}=sd:call(etcd,db_host_spec,read,[local_ip,HostSpec],5000),
+    {ok,Port}=sd:call(etcd,db_host_spec,read,[ssh_port,HostSpec],5000),
+    {ok,Uid}=sd:call(etcd,db_host_spec,read,[uid,HostSpec],5000),
+    {ok,Pwd}=sd:call(etcd,db_host_spec,read,[passwd,HostSpec],5000),
     TimeOut=2*5000,
-    case rpc:call(node(),ssh_server,send_msg,[HostSpec,LinuxCmd,TimeOut],TimeOut-5000) of 
+    case ssh_server:send_msg(Ip,Port,Uid,Pwd,LinuxCmd,TimeOut) of 
 	{ok,[]}->
 	    ?LOG_NOTICE("sofar so good  %%%%%%%%%%%%%%%%%%%%% ",[DeploymentId]),
 	    case check_started_node(Node) of
