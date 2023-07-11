@@ -22,20 +22,13 @@
 %%% API
 %%%===================================================================
 orchestrate(TimeOut)->
- %   ?LOG_NOTICE("start ***********************************",[]),
- %   IsWantedState=is_wanted_state(),
- %   ?LOG_NOTICE("IsWantedState ***********************************",[IsWantedState]),
     timer:sleep(TimeOut),
- %   Result=time(),
     Result=case is_wanted_state() of
 	       true->
-		   ?LOG_NOTICE("True ***********************************",[]),
 		   true;
 	       false ->
-		   ?LOG_NOTICE("false ***********************************",[]),
 		   start_missing_deployments()	
 	   end,
-    ?LOG_NOTICE("Result ",[Result]),
     rpc:cast(node(),orchestrate_control,orchestrate,[Result]).
 
 %%--------------------------------------------------------------------
@@ -44,13 +37,8 @@ orchestrate(TimeOut)->
 %% @end
 %%--------------------------------------------------------------------
 start_missing_deployments()->
-    ?LOG_NOTICE("node  ***********************************",[node()]),
     MissingDeploymentIds=get_missing_deployments(),
     StartResult=start_deployment(MissingDeploymentIds),
-
-%    StartResult=[rpc:call(node(),vm_appl_control,start_deployment,[DeploymentId]
-% ,2*5000)||DeploymentId<-get_missing_deployments()],
-    ?LOG_NOTICE("StartResult  ***********************************",[StartResult]),
     StartResult.
 
 start_deployment(L)->
@@ -58,16 +46,12 @@ start_deployment(L)->
 start_deployment([],Acc)->
     Acc;
 start_deployment([DeploymentId|T],Acc)->
-     ?LOG_NOTICE("DeploymentId  ***********************************",[DeploymentId]),
-  %   NewAcc=case rpc:call(node(),vm_appl_control,start_deployment,[DeploymentId],2*5000) of
     NewAcc=case vm_appl_control:start_deployment(DeploymentId) of
-		{ok,DeploymentId}->
-		    ?LOG_NOTICE("Succeded to start_deployment result ",[{ok,DeploymentId}]),
-		    [{ok,DeploymentId}|Acc];
-		Reason->
-		    ?LOG_NOTICE("Failed  to start_deployment result ",[Reason,DeploymentId]),
-		     [{error,[Reason,DeploymentId]}|Acc]
-	    end,
+	       {ok,DeploymentId}->
+		   [{ok,DeploymentId}|Acc];
+	       Reason->
+		   [{error,[Reason,DeploymentId]}|Acc]
+	   end,
     start_deployment(T,NewAcc).
 %%--------------------------------------------------------------------
 %% @doc
