@@ -210,7 +210,7 @@ start_vm(DeploymentId)->
     ?LOG_NOTICE("sofar so good  %%%%%%%%%%%%%%%%%%%%% ",[DeploymentId]),
     LinuxCmd="erl -sname "++NodeName++" "++" -setcookie "++CookieStr++" "++" -detached ",
     TimeOut=2*5000,
-    case ssh_server:send_msg(HostSpec,LinuxCmd,TimeOut) of 
+    case rpc:call(node(),ssh_server,send_msg,[HostSpec,LinuxCmd,TimeOut],TimeOut-5000) of 
 	{ok,[]}->
 	    ?LOG_NOTICE("sofar so good  %%%%%%%%%%%%%%%%%%%%% ",[DeploymentId]),
 	    case check_started_node(Node) of
