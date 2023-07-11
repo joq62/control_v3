@@ -44,8 +44,11 @@ orchestrate(TimeOut)->
 %% @end
 %%--------------------------------------------------------------------
 start_missing_deployments()->
-    [rpc:call(node(),vm_appl_control,start_deployment,[DeploymentId]
-,2*5000)||DeploymentId<-get_missing_deployments()].
+    ?LOG_NOTICE("node  ***********************************",[node()]),
+    StartResult=[rpc:call(node(),vm_appl_control,start_deployment,[DeploymentId]
+,2*5000)||DeploymentId<-get_missing_deployments()],
+    ?LOG_NOTICE("StartResult  ***********************************",[StartResult]),
+    StartResult.
 %%--------------------------------------------------------------------
 %% @doc
 %% @spec
