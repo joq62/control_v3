@@ -351,6 +351,7 @@ check_started_node(0,_Node,Boolean) ->
   %  io:format("Dbg calling node,Node ~p~n",[{node(),Node,?MODULE,?FUNCTION_NAME,?LINE}]),
     Boolean;
 check_started_node(N,Node,_) ->
+    ?LOG_NOTICE("check start node  ",[N,Node]),
  %   io:format("Dbg calling node,Node ~p~n",[{node(),Node,erlang:get_cookie(),?MODULE,?FUNCTION_NAME,?LINE}]),
     Boolean=case net_adm:ping(Node) of
 		pang->
