@@ -159,6 +159,7 @@ restart_deployment(DeploymentId)->
 %% @end
 %%--------------------------------------------------------------------
 start_deployment(DeploymentId)->
+    ?LOG_NOTICE("DeploymentId %%%%%%%%%%%%%%%%%%%%% ",[DeploymentId]),
     Result=case start_vm(DeploymentId) of
 	       false->
 		   {error,["Couldnt start vm",DeploymentId]};
@@ -211,6 +212,7 @@ start_vm(DeploymentId)->
 	    ?LOG_NOTICE("Vm started",[Node,DeploymentId]),
 	    true;
 	false ->
+	    ?LOG_NOTICE("Failed to start vm  %%%%%%%%%%%%%%%%%%%%% ",[Node,DeploymentId]),
 	    false
     end.
 %%--------------------------------------------------------------------
