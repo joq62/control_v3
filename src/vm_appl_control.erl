@@ -197,6 +197,8 @@ delete_deployment(DeploymentId)->
 start_vm(DeploymentId)->
  
     %% Ensure Node  stopped
+    ReadEtcd=sd:call(etcd,db_deploy,read,[node,DeploymentId],5000),
+    ?LOG_NOTICE("ReadEtcd  %%%%%%%%%%%%%%%%%%%%% ",[ReadEtcd,DeploymentId]),
     {ok,Node}=sd:call(etcd,db_deploy,read,[node,DeploymentId],5000),
     rpc:call(Node,init,stop,[],5000),
     true=check_stopped_node(Node),
