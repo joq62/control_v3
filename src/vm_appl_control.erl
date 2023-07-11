@@ -197,18 +197,14 @@ delete_deployment(DeploymentId)->
 start_vm(DeploymentId)->
  
     %% Ensure Node  stopped
-    ReadEtcd=sd:call(etcd,db_deploy,read,[node,DeploymentId],5000),
-    ?LOG_NOTICE("ReadEtcd  %%%%%%%%%%%%%%%%%%%%% ",[ReadEtcd,DeploymentId]),
     {ok,Node}=sd:call(etcd,db_deploy,read,[node,DeploymentId],5000),
     rpc:call(Node,init,stop,[],5000),
     true=check_stopped_node(Node),
-    ?LOG_NOTICE("sofar so good  %%%%%%%%%%%%%%%%%%%%% ",[DeploymentId]),
-    %% ssh start vm    
+       %% ssh start vm    
     CookieStr=atom_to_list(erlang:get_cookie()),
     {ok,NodeName}=sd:call(etcd,db_deploy,read,[node_name,DeploymentId],5000),
     {ok,HostSpec}=sd:call(etcd,db_deploy,read,[host_spec,DeploymentId],5000),
-    ?LOG_NOTICE("sofar so good  %%%%%%%%%%%%%%%%%%%%% ",[DeploymentId]),
-    LinuxCmd="erl -sname "++NodeName++" "++" -setcookie "++CookieStr++" "++" -detached ",
+     LinuxCmd="erl -sname "++NodeName++" "++" -setcookie "++CookieStr++" "++" -detached ",
 
     {ok,Ip}=sd:call(etcd,db_host_spec,read,[local_ip,HostSpec],5000),
     {ok,Port}=sd:call(etcd,db_host_spec,read,[ssh_port,HostSpec],5000),
@@ -217,17 +213,13 @@ start_vm(DeploymentId)->
     TimeOut=2*5000,
     case ssh_server:send_msg(Ip,Port,Uid,Pwd,LinuxCmd,TimeOut) of 
 	{ok,[]}->
-	    ?LOG_NOTICE("sofar so good  %%%%%%%%%%%%%%%%%%%%% ",[DeploymentId]),
 	    case check_started_node(Node) of
 		true->
-		    ?LOG_NOTICE("Vm started",[Node,DeploymentId]),
 		    true;
 		false ->
-		    ?LOG_NOTICE("Failed to start vm  %%%%%%%%%%%%%%%%%%%%% ",[Node,DeploymentId]),
 		    false
 	    end;
 	Reason ->
-	    ?LOG_NOTICE("Failed to start vm  %%%%%%%%%%%%%%%%%%%%% ",[Reason,Node,DeploymentId]),
 	    false
     end.
 %%--------------------------------------------------------------------
@@ -366,8 +358,6 @@ check_started_node(0,_Node,Boolean) ->
   %  io:format("Dbg calling node,Node ~p~n",[{node(),Node,?MODULE,?FUNCTION_NAME,?LINE}]),
     Boolean;
 check_started_node(N,Node,_) ->
-    ?LOG_NOTICE("check start node  ",[N,Node]),
- %   io:format("Dbg calling node,Node ~p~n",[{node(),Node,erlang:get_cookie(),?MODULE,?FUNCTION_NAME,?LINE}]),
     Boolean=case net_adm:ping(Node) of
 		pang->
 		    timer:sleep(100),
