@@ -45,10 +45,29 @@ orchestrate(TimeOut)->
 %%--------------------------------------------------------------------
 start_missing_deployments()->
     ?LOG_NOTICE("node  ***********************************",[node()]),
-    StartResult=[rpc:call(node(),vm_appl_control,start_deployment,[DeploymentId]
-,2*5000)||DeploymentId<-get_missing_deployments()],
+    MissingDeploymentIds=get_missing_deployments(),
+    StartResult=start_deployment(MissingDeploymentIds),
+
+%    StartResult=[rpc:call(node(),vm_appl_control,start_deployment,[DeploymentId]
+% ,2*5000)||DeploymentId<-get_missing_deployments()],
     ?LOG_NOTICE("StartResult  ***********************************",[StartResult]),
     StartResult.
+
+start_deployment(L)->
+    start_deployment(L,[]).
+start_deployment([],Acc)->
+    Acc;
+start_deployment([DeploymentId|T],Acc)->
+     ?LOG_NOTICE("DeploymentId  ***********************************",[DeploymentId]),
+     NewAcc=case rpc:call(node(),vm_appl_control,start_deployment,[DeploymentId],2*5000) of
+		{ok,DeploymentId}->
+		    ?LOG_NOTICE("Succeded to start_deployment result ",[{ok,DeploymentId}]),
+		    [{ok,DeploymentId}|Acc];
+		Reason->
+		    ?LOG_NOTICE("Failed  to start_deployment result ",[Reason,DeploymentId]),
+		     [{error,[Reason,DeploymentId]}|Acc]
+	    end,
+    start_deployment(T,NewAcc).
 %%--------------------------------------------------------------------
 %% @doc
 %% @spec
