@@ -206,13 +206,18 @@ start_vm(DeploymentId)->
     {ok,HostSpec}=sd:call(etcd,db_deploy,read,[host_spec,DeploymentId],5000),
     LinuxCmd="erl -sname "++NodeName++" "++" -setcookie "++CookieStr++" "++" -detached ",
     TimeOut=2*5000,
-    {ok,[]}=ssh_server:send_msg(HostSpec,LinuxCmd,TimeOut),
-    case check_started_node(Node) of
-	true->
-	    ?LOG_NOTICE("Vm started",[Node,DeploymentId]),
-	    true;
-	false ->
-	    ?LOG_NOTICE("Failed to start vm  %%%%%%%%%%%%%%%%%%%%% ",[Node,DeploymentId]),
+    case ssh_server:send_msg(HostSpec,LinuxCmd,TimeOut) of 
+	{ok,[]}->
+	    case check_started_node(Node) of
+		true->
+		    ?LOG_NOTICE("Vm started",[Node,DeploymentId]),
+		    true;
+		false ->
+		    ?LOG_NOTICE("Failed to start vm  %%%%%%%%%%%%%%%%%%%%% ",[Node,DeploymentId]),
+		    false
+	    end;
+	Reason ->
+	    ?LOG_NOTICE("Failed to start vm  %%%%%%%%%%%%%%%%%%%%% ",[Reason,Node,DeploymentId]),
 	    false
     end.
 %%--------------------------------------------------------------------
