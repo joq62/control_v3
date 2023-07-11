@@ -59,7 +59,8 @@ start_deployment([],Acc)->
     Acc;
 start_deployment([DeploymentId|T],Acc)->
      ?LOG_NOTICE("DeploymentId  ***********************************",[DeploymentId]),
-     NewAcc=case rpc:call(node(),vm_appl_control,start_deployment,[DeploymentId],2*5000) of
+  %   NewAcc=case rpc:call(node(),vm_appl_control,start_deployment,[DeploymentId],2*5000) of
+    NewAcc=case vm_appl_control:start_deployment(DeploymentId) of
 		{ok,DeploymentId}->
 		    ?LOG_NOTICE("Succeded to start_deployment result ",[{ok,DeploymentId}]),
 		    [{ok,DeploymentId}|Acc];
