@@ -39,6 +39,7 @@ orchestrate(TimeOut)->
 		      end,
 		   %?LOG_NOTICE("R1",[R1]),
 		   timer:sleep(TimeOut),
+		   sd:call(etcd,db_lock,unlock,[?OrchestrateLock,TransactionId],5000),
 		   R1;
 	       Reason->		   
 		   %?LOG_NOTICE("Error",[Reason]),
