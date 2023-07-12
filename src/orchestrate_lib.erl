@@ -38,7 +38,8 @@ orchestrate(TimeOut)->
 			      start_missing_deployments()	
 		      end,
 		   ?LOG_NOTICE("R1",[R1]),
-		   timer:sleep(TimeOut);
+		   timer:sleep(TimeOut),
+		   R1;
 	       Reason->		   
 		   ?LOG_NOTICE("Error",[Reason]),
 		   {error,["Un expected error ",Reason]}
