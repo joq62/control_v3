@@ -27,7 +27,7 @@ orchestrate(TimeOut)->
 
     Result=case sd:call(etcd,db_lock,try_lock,[?OrchestrateLock,?LockTimeOut],5000) of
 	       locked->
-		   ?LOG_NOTICE("locked",[]),
+		  % ?LOG_NOTICE("locked",[]),
 		   timer:sleep(TimeOut),
 		   locked;
 	       {ok,TransactionId} ->
@@ -37,11 +37,11 @@ orchestrate(TimeOut)->
 			  false ->
 			      start_missing_deployments()	
 		      end,
-		   ?LOG_NOTICE("R1",[R1]),
+		   %?LOG_NOTICE("R1",[R1]),
 		   timer:sleep(TimeOut),
 		   R1;
 	       Reason->		   
-		   ?LOG_NOTICE("Error",[Reason]),
+		   %?LOG_NOTICE("Error",[Reason]),
 		   {error,["Un expected error ",Reason]}
 	   end,
     rpc:cast(node(),orchestrate_control,orchestrate,[Result]).
