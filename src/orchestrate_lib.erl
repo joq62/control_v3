@@ -10,6 +10,8 @@
 
 
 -include("log.api").
+-include("etcd.hrl").
+
 %% API
 -export([
 	 orchestrate/1,
@@ -22,12 +24,24 @@
 %%% API
 %%%===================================================================
 orchestrate(TimeOut)->
-    timer:sleep(TimeOut),
-    Result=case is_wanted_state() of
-	       true->
-		   true;
-	       false ->
-		   start_missing_deployments()	
+
+    Result=case sd:call(etcd,db_lock,try_lock,[?OrchestrateLock,?LockTimeOut],5000) of
+	       locked->
+		   ?LOG_NOTICE("locked",[]),
+		   timer:sleep(TimeOut),
+		   locked;
+	       {ok,TransactionId} ->
+		   R1=case is_wanted_state() of
+			  true->
+			      true;
+			  false ->
+			      start_missing_deployments()	
+		      end,
+		   ?LOG_NOTICE("R1",[R1]),
+		   timer:sleep(TimeOut);
+	       Reason->		   
+		   ?LOG_NOTICE("Error",[Reason]),
+		   {error,["Un expected error ",Reason]}
 	   end,
     rpc:cast(node(),orchestrate_control,orchestrate,[Result]).
 

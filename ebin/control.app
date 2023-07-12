@@ -6,7 +6,7 @@
               {applications,[kernel,stdlib]},
               {env,[]},
               {modules,[cmn_appl,control,control_app,control_sup,
-                        orchestrate_control,orchestrate_lib,
-                        orchestrate_server,ssh_controller,vm_appl_control]},
+                        orchestrate_control,orchestrate_lib,ssh_controller,
+                        vm_appl_control]},
               {licenses,["Apache-2.0"]},
               {links,[]}]}.

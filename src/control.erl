@@ -66,7 +66,7 @@ ping()->
 	  {stop, Reason :: term()} |
 	  ignore.
 init([]) ->
-    true=?LOG_NOTICE("Server started",[]),
+    ?LOG_NOTICE("Server started",[]),
     {ok, #state{}}.
 
 %%--------------------------------------------------------------------
