@@ -80,8 +80,12 @@ start_deployment([],Acc)->
 start_deployment([DeploymentId|T],Acc)->
     NewAcc=case vm_appl_control:start_deployment(DeploymentId) of
 	       {ok,DeploymentId}->
+		   {ok,Node}=sd:call(etcd,db_deploy,read,[node,DeploymentId],5000),
+		   ?LOG_NOTICE("Ok Node",[ Node]),
 		   [{ok,DeploymentId}|Acc];
 	       Reason->
+		   {ok,Node}=sd:call(etcd,db_deploy,read,[node,DeploymentId],5000),
+		   ?LOG_NOTICE("Failed to start Node",[Node,Reason]),
 		   [{error,[Reason,DeploymentId]}|Acc]
 	   end,
     start_deployment(T,NewAcc).
