@@ -159,7 +159,6 @@ restart_deployment(DeploymentId)->
 %% @end
 %%--------------------------------------------------------------------
 start_deployment(DeploymentId)->
-    ?LOG_NOTICE("DeploymentId %%%%%%%%%%%%%%%%%%%%% ",[DeploymentId]),
     Result=case start_vm(DeploymentId) of
 	       false->
 		   {error,["Couldnt start vm",DeploymentId]};
@@ -172,7 +171,7 @@ start_deployment(DeploymentId)->
 			       {error,Reason}->
 				   {error,["Couldnt start app",DeploymentId,Reason]};
 			       ok->
-				   ?LOG_NOTICE("Deployment started",[DeploymentId]),
+%				   ?LOG_NOTICE("Deployment started",[DeploymentId]),
 				   {ok,DeploymentId}
 			   end
 		   end

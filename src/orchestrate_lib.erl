@@ -14,6 +14,7 @@
 
 %% API
 -export([
+	 ensure_connected/0,
 	 orchestrate/1,
 	 is_wanted_state/0,
 	 start_missing_deployments/0,
@@ -25,7 +26,8 @@
 %%%===================================================================
 orchestrate(TimeOut)->
     
-    ensure_connected(),
+    rpc:call(node(),?MODULE,ensure_connected,[],3*5000),
+    
     Result=case sd:call(etcd,db_lock,try_lock,[?OrchestrateLock,?LockTimeOut],5000) of
 	       locked->
 		  % ?LOG_NOTICE("locked",[]),
@@ -60,7 +62,7 @@ ensure_connected()->
     PingResult=[{N1,N2,rpc:call(N1,net_adm,ping,[N2],5000)}||N1<-AllNodes,
 							 N2<-AllNodes,
 							     N1/=N2],
-    ?LOG_NOTICE("PingResult",PingResult).
+    ?LOG_NOTICE("PingResult",[PingResult]).
 	
     
     
