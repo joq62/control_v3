@@ -34,6 +34,10 @@ init([]) ->
 		    start=>{ssh_server,start_link,[]}},
 	%	  #{id=>orchestrate,
 	%	    start=>{orchestrate_control,start_link,[]}},
+		  #{id=>control_node,
+		   start=>{control_node,start_link,[]}},
+		  #{id=>control_provider,
+		   start=>{control_provider,start_link,[]}},
 		  #{id=>control,
 		   start=>{control,start_link,[]}}
 		 ],

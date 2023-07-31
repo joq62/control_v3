@@ -6,7 +6,7 @@
 %%% @end
 %%% Created : 18 Apr 2023 by c50 <joq62@c50>
 %%%-------------------------------------------------------------------
--module(control_node).
+-module(control_provider).
 
 -behaviour(gen_server).
 %%--------------------------------------------------------------------
@@ -20,8 +20,10 @@
 %% API
 
 -export([
-	 start_node/2,
-	 stop_node/1,
+	 load_provider/1,
+	 start_provider/1,
+	 stop_provider/1,
+	 unload_provider/1,
 	 is_alive/1,
 
 	 ping/0,
@@ -47,20 +49,41 @@
 %% Get all information related to host HostName  
 %% @end
 %%--------------------------------------------------------------------
--spec start_node(DeploymentRecord :: term(),ClusterSpec :: string()) -> ok | {error, Error :: term()}.
+-spec load_provider(DeploymentRecord :: term()) -> ok | {error, Error :: term()}.
 
-start_node(DeploymentRecord,ClusterSpec)->
-    gen_server:call(?SERVER, {start_node,DeploymentRecord,ClusterSpec},infinity).
+load_provider(DeploymentRecord)->
+    gen_server:call(?SERVER, {load_provider,DeploymentRecord},infinity).
 
 %%--------------------------------------------------------------------
 %% @doc
 %% Get all information related to host HostName  
 %% @end
 %%--------------------------------------------------------------------
--spec stop_node(DeploymentRecord :: term()) -> ok | {error, Error :: term()}.
+-spec start_provider(DeploymentRecord :: term()) -> ok | {error, Error :: term()}.
 
-stop_node(DeploymentRecord)->
-    gen_server:call(?SERVER, {stop_node,DeploymentRecord},infinity).
+start_provider(DeploymentRecord)->
+    gen_server:call(?SERVER, {start_provider,DeploymentRecord},infinity).
+
+%%--------------------------------------------------------------------
+%% @doc
+%% Get all information related to host HostName  
+%% @end
+%%--------------------------------------------------------------------
+-spec stop_provider(DeploymentRecord :: term()) -> ok | {error, Error :: term()}.
+
+stop_provider(DeploymentRecord)->
+    gen_server:call(?SERVER, {stop_provider,DeploymentRecord},infinity).
+
+%%--------------------------------------------------------------------
+%% @doc
+%% Get all information related to host HostName  
+%% @end
+%%--------------------------------------------------------------------
+-spec unload_provider(DeploymentRecord :: term()) -> ok | {error, Error :: term()}.
+
+unload_provider(DeploymentRecord)->
+    gen_server:call(?SERVER, {unload_provider,DeploymentRecord},infinity).
+
 
 %%--------------------------------------------------------------------
 %% @doc
@@ -122,23 +145,29 @@ init([]) ->
 %% @spec
 %% @end
 %%--------------------------------------------------------------------
-handle_call({start_node,DeploymentRecord,ClusterSpec}, _From, State) ->
-    Reply=lib_control_node:start_node(DeploymentRecord,ClusterSpec),
+handle_call({load_provider,DeploymentRecord}, _From, State) ->
+    Reply=lib_control_provider:load_provider(DeploymentRecord),
     {reply, Reply, State};
 
-handle_call({stop_node,DeploymentRecord}, _From, State) ->
-    Reply=lib_control_node:stop_node(DeploymentRecord),
+handle_call({start_provider,DeploymentRecord}, _From, State) ->
+    Reply=lib_control_provider:start_provider(DeploymentRecord),
+    {reply, Reply, State};
+
+handle_call({stop_provider,DeploymentRecord}, _From, State) ->
+    Reply=lib_control_provider:stop_provider(DeploymentRecord),
+    {reply, Reply, State};
+
+handle_call({unload_provider,DeploymentRecord}, _From, State) ->
+    Reply=lib_control_provider:unload_provider(DeploymentRecord),
     {reply, Reply, State};
 
 handle_call({is_alive,DeploymentRecord}, _From, State) ->
-    Reply=lib_control_node:is_alive(DeploymentRecord),
+    Reply=lib_control_provider:is_alive(DeploymentRecord),
     {reply, Reply, State};
-
 
 handle_call({ping}, _From, State) ->
     Reply=pong,
     {reply, Reply, State};
-
 
 handle_call(UnMatchedSignal, From, State) ->
     io:format("unmatched_signal ~p~n",[{UnMatchedSignal, From,?MODULE,?LINE}]),
