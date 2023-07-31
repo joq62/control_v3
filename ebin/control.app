@@ -5,7 +5,7 @@
               {mod,{control_app,[]}},
               {applications,[kernel,stdlib]},
               {env,[]},
-              {modules,[cmn_appl,control,control_app,control_sup,
+              {modules,[cmn_appl,control,control_app,control_node,control_sup,
                         orchestrate_control,orchestrate_lib,ssh_controller,
                         vm_appl_control]},
               {licenses,["Apache-2.0"]},
