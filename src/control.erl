@@ -9,9 +9,8 @@
 -module(control).
  
 -behaviour(gen_server).
-
-
 -include("log.api").
+
 %% API
 -export([
 	 ping/0]).
@@ -25,7 +24,11 @@
 
 -define(SERVER, ?MODULE).
 
--record(state, {}).
+-record(state, { 
+		 cluster_spec,
+		 cookie_str,
+		 wanted_state
+}).
 
 %%%===================================================================
 %%% API
@@ -66,8 +69,20 @@ ping()->
 	  {stop, Reason :: term()} |
 	  ignore.
 init([]) ->
+    {ok,ClusterSpec}=etcd_cluster_to_deploy:get_cluster_spec(),
+    {ok,CookieStr}=etcd_cluster:get_cookie_str(ClusterSpec),
+    {ok,WantedState}=etcd_cluster:get_deployment_records(ClusterSpec),
+    true=erlang:set_cookie(node(),list_to_atom(CookieStr)),
+    
     ?LOG_NOTICE("Server started",[]),
-    {ok, #state{}}.
+    ?LOG_NOTICE("ClusterSpec ",[ClusterSpec]),
+    ?LOG_NOTICE("CookieStr ",[CookieStr]),
+    ?LOG_NOTICE("WantedState ",WantedState),
+    {ok, #state{
+	    cluster_spec=ClusterSpec,
+	    cookie_str=CookieStr,
+	    wanted_state=WantedState
+	   }}.
 
 %%--------------------------------------------------------------------
 %% @private
