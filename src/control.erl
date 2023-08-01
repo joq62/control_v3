@@ -16,7 +16,8 @@
 	 ping/0]).
 
 
--export([start_link/0]).
+-export([start_link/0,
+	 stop/0]).
 
 %% gen_server callbacks
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2,
@@ -46,6 +47,15 @@
 	  ignore.
 start_link() ->
     gen_server:start_link({local, ?SERVER}, ?MODULE, [], []).
+
+%%--------------------------------------------------------------------
+%% @doc
+%% Starts the server
+%% @end
+%%--------------------------------------------------------------------
+-spec stop() -> ok.
+stop() ->
+    gen_server:terminate(stopped).
 
 %%%===================================================================
 %%% gen_server callbacks

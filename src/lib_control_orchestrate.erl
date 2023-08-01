@@ -44,6 +44,7 @@ start(Interval)->
 			   StartResults
 		   end
 	   end,
+    ?LOG_NOTICE("Debug ",[node(),Result]),
     rpc:cast(node(),control_orchestrate,result,[Result]).
 
 %%--------------------------------------------------------------------
