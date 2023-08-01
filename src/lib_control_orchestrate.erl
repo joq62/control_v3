@@ -34,6 +34,7 @@ start(Interval)->
 	       {ok,TransAction}->
 		   {ok,ClusterSpec}=sd:call(etcd,etcd_paas_config,get_cluster_spec,[],5000),
 		   MissingDeployments=missing_deployments(ClusterSpec),
+		   ?LOG_NOTICE("Debug: MissingDeployments ",[node(),MissingDeployments]),
 		   StartResults=start_deployments(MissingDeployments,ClusterSpec),
 		   case sd:call(etcd,etcd_lock,unlock,[Lock,TransAction],5000) of
 		       {badrpc,Reason}->
