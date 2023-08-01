@@ -136,7 +136,7 @@ stop()-> gen_server:call(?SERVER, {stop},infinity).
 
 init([]) ->
     
-    ?LOG_NOTICE("Server started ",[]),
+    ?LOG_NOTICE("Server started ",[node()]),
     {ok, #state{}}.
 
 

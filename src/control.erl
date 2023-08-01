@@ -86,7 +86,7 @@ init([]) ->
     {ok,DeploymentRecords}=sd:call(etcd,etcd_cluster,get_deployment_records,[ClusterSpec],5000),
     true=erlang:set_cookie(node(),list_to_atom(CookieStr)),
     
-    ?LOG_NOTICE("Server started",[]),
+    ?LOG_NOTICE("Server started",[node()]),
     ?LOG_NOTICE("ClusterSpec ",[ClusterSpec]),
     ?LOG_NOTICE("Lock ",[Lock]),
     ?LOG_NOTICE("CookieStr ",[CookieStr]),
