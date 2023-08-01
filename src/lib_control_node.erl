@@ -174,7 +174,7 @@ is_node_started(0,_Node,Boolean) ->
 is_node_started(N,Node,_) ->
     Boolean=case net_adm:ping(Node) of
 		pang->
-		    timer:sleep(500),
+		    timer:sleep(30),
 		    false;
 		pong->
 		    true

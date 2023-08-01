@@ -38,6 +38,8 @@ init([]) ->
 		   start=>{control_node,start_link,[]}},
 		  #{id=>control_provider,
 		   start=>{control_provider,start_link,[]}},
+		  #{id=>control_orchestrate,
+		   start=>{control_orchestrate,start_link,[]}},
 		  #{id=>control,
 		   start=>{control,start_link,[]}}
 		 ],

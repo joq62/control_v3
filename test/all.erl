@@ -28,10 +28,11 @@
 start([ClusterSpec])->
    
     ok=setup(ClusterSpec),
-    ok=create_del_node_and_app(),
-    io:format("Test OK !!! ~p~n",[?MODULE]),
-    timer:sleep(2000),
-    init:stop(),
+  %  ok=create_del_node_and_app(),
+   % io:format("Test OK !!! ~p~n",[?MODULE]),
+    io:format("OK there you go !!! ~p~n",[?MODULE]),
+ %   timer:sleep(2000),
+  %  init:stop(),
     ok.
 
 %% --------------------------------------------------------------------
@@ -41,7 +42,7 @@ start([ClusterSpec])->
 %% --------------------------------------------------------------------
 create_del_node_and_app()->
     io:format("Start ~p~n",[{?MODULE,?FUNCTION_NAME}]),    
-    {ok,ClusterSpec}=etcd_cluster_to_deploy:get_cluster_spec(),
+    {ok,ClusterSpec}=etcd_paas_config:get_cluster_spec(),
     {ok,Node}=sd:call(etcd,etcd_deployment_record,get_node,[?RecordTest],5000),
     {ok,Dir}=sd:call(etcd,etcd_deployment_record,get_dir,[?RecordTest],5000),
     ok=control_node:stop_node(?RecordTest),
@@ -84,10 +85,9 @@ setup(ClusterSpec)->
     pong=etcd:ping(),
    
     %% Simulate sys_boot
-    Node=node(),
-    ok=etcd_lock:create(ClusterSpec),
-    ok=etcd_cluster_to_deploy:create(ClusterSpec,node()),
-   
+        
+    ok=etcd_paas_config:create(ClusterSpec,lock_test),
+    ok=etcd_lock:create(lock_test),
     {ok,DeploymentRecords}=etcd_deployment_record:create_records(ClusterSpec),
     ok=etcd_cluster:set_deployment_records(DeploymentRecords,ClusterSpec),
    

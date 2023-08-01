@@ -4,17 +4,29 @@
 %%% @doc
 %%%
 %%% @end
-%%% Created :  2 Jun 2023 by c50 <joq62@c50>
+%%% Created : 18 Apr 2023 by c50 <joq62@c50>
 %%%-------------------------------------------------------------------
--module(control).
- 
+-module(control_orchestrate).
+
 -behaviour(gen_server).
+%%--------------------------------------------------------------------
+%% Include 
+%%
+%%--------------------------------------------------------------------
+
 -include("log.api").
+ 
+-define(OrchestrateInterval,1*20*1000).
 
 %% API
--export([
-	 ping/0]).
 
+-export([
+	 orchestrate/0,
+	 result/1,
+
+	 ping/0,
+	 stop/0
+	]).
 
 -export([start_link/0]).
 
@@ -24,17 +36,39 @@
 
 -define(SERVER, ?MODULE).
 
--record(state, { 
-		 cluster_spec,
-		 lock,
-		 cookie_str,
-		 deployment_records
-}).
+-record(state, {}).
 
 %%%===================================================================
 %%% API
 %%%===================================================================
 
+%%--------------------------------------------------------------------
+%% @doc
+%% Get all information related to host HostName  
+%% @end
+%%--------------------------------------------------------------------
+-spec orchestrate()-> ok.
+
+orchestrate()->
+    gen_server:cast(?SERVER, {orchestrate}).
+
+%%--------------------------------------------------------------------
+%% @doc
+%% Get all information related to host HostName  
+%% @end
+%%--------------------------------------------------------------------
+-spec result(Result :: term()) -> ok.
+
+result(Result)->
+    gen_server:cast(?SERVER, {result,Result}).
+
+%%--------------------------------------------------------------------
+%% @doc
+%% @spec
+%% @end
+%%--------------------------------------------------------------------
+ping()-> 
+    gen_server:call(?SERVER, {ping},infinity).
 %%--------------------------------------------------------------------
 %% @doc
 %% Starts the server
@@ -47,16 +81,12 @@
 start_link() ->
     gen_server:start_link({local, ?SERVER}, ?MODULE, [], []).
 
+
+stop()-> gen_server:call(?SERVER, {stop},infinity).
+
 %%%===================================================================
 %%% gen_server callbacks
 %%%===================================================================
-%%--------------------------------------------------------------------
-%% @doc
-%% @spec
-%% @end
-%%--------------------------------------------------------------------
-ping()-> 
-    gen_server:call(?SERVER, {ping},infinity).    
 
 %%--------------------------------------------------------------------
 %% @private
@@ -69,49 +99,26 @@ ping()->
 	  {ok, State :: term(), hibernate} |
 	  {stop, Reason :: term()} |
 	  ignore.
+
 init([]) ->
-    {ok,ClusterSpec}=etcd_paas_config:get_cluster_spec(),
-    {ok,Lock}=etcd_paas_config:get_lock(),
-    {ok,CookieStr}=etcd_cluster:get_cookie_str(ClusterSpec),
-    {ok,DeploymentRecords}=etcd_cluster:get_deployment_records(ClusterSpec),
-    true=erlang:set_cookie(node(),list_to_atom(CookieStr)),
-    
-    ?LOG_NOTICE("Server started",[]),
-    ?LOG_NOTICE("ClusterSpec ",[ClusterSpec]),
-    ?LOG_NOTICE("Lock ",[Lock]),
-    ?LOG_NOTICE("CookieStr ",[CookieStr]),
-    ?LOG_NOTICE("DeploymentRecords ",DeploymentRecords),
-    {ok, #state{
-	    cluster_spec=ClusterSpec,
-	    cookie_str=CookieStr,
-	    deployment_records=DeploymentRecords,
-	    lock=Lock
-	   }}.
+    spawn(fun()->lib_control_orchestrate:start(?OrchestrateInterval) end),
+    ?LOG_NOTICE("Server started ",[]),
+    {ok, #state{}}.
+
 
 %%--------------------------------------------------------------------
-%% @private
 %% @doc
-%% Handling call messages
+%% @spec
 %% @end
 %%--------------------------------------------------------------------
--spec handle_call(Request :: term(), From :: {pid(), term()}, State :: term()) ->
-	  {reply, Reply :: term(), NewState :: term()} |
-	  {reply, Reply :: term(), NewState :: term(), Timeout :: timeout()} |
-	  {reply, Reply :: term(), NewState :: term(), hibernate} |
-	  {noreply, NewState :: term()} |
-	  {noreply, NewState :: term(), Timeout :: timeout()} |
-	  {noreply, NewState :: term(), hibernate} |
-	  {stop, Reason :: term(), Reply :: term(), NewState :: term()} |
-	  {stop, Reason :: term(), NewState :: term()}.
-
-
-
 handle_call({ping}, _From, State) ->
-    Reply = pong,
+    Reply=pong,
     {reply, Reply, State};
 
-handle_call(_Request, _From, State) ->
-    Reply = ok,
+
+handle_call(UnMatchedSignal, From, State) ->
+    io:format("unmatched_signal ~p~n",[{UnMatchedSignal, From,?MODULE,?LINE}]),
+    Reply = {error,[unmatched_signal,UnMatchedSignal, From]},
     {reply, Reply, State}.
 
 %%--------------------------------------------------------------------
@@ -120,12 +127,17 @@ handle_call(_Request, _From, State) ->
 %% Handling cast messages
 %% @end
 %%--------------------------------------------------------------------
--spec handle_cast(Request :: term(), State :: term()) ->
-	  {noreply, NewState :: term()} |
-	  {noreply, NewState :: term(), Timeout :: timeout()} |
-	  {noreply, NewState :: term(), hibernate} |
-	  {stop, Reason :: term(), NewState :: term()}.
-handle_cast(_Request, State) ->
+handle_cast({orchestrate}, State) ->
+    io:format(" ~p~n",[{?MODULE,?LINE}]),
+    {noreply, State};
+
+handle_cast({result,Result}, State) ->
+    io:format("Result ~p~n",[{?MODULE,?LINE,Result}]),
+    spawn(fun()->lib_control_orchestrate:start(?OrchestrateInterval) end),
+    {noreply, State};
+
+handle_cast(UnMatchedSignal, State) ->
+    io:format("unmatched_signal ~p~n",[{UnMatchedSignal,?MODULE,?LINE}]),
     {noreply, State}.
 
 %%--------------------------------------------------------------------
@@ -139,7 +151,8 @@ handle_cast(_Request, State) ->
 	  {noreply, NewState :: term(), Timeout :: timeout()} |
 	  {noreply, NewState :: term(), hibernate} |
 	  {stop, Reason :: normal | term(), NewState :: term()}.
-handle_info(_Info, State) ->
+handle_info(Info, State) ->
+    io:format("unmatched_signal ~p~n",[{Info,?MODULE,?LINE}]),
     {noreply, State}.
 
 %%--------------------------------------------------------------------
