@@ -70,10 +70,10 @@ ping()->
 	  {stop, Reason :: term()} |
 	  ignore.
 init([]) ->
-    {ok,ClusterSpec}=etcd_paas_config:get_cluster_spec(),
-    {ok,Lock}=etcd_paas_config:get_lock(),
-    {ok,CookieStr}=etcd_cluster:get_cookie_str(ClusterSpec),
-    {ok,DeploymentRecords}=etcd_cluster:get_deployment_records(ClusterSpec),
+    {ok,ClusterSpec}=sd:call(etcd,etcd_paas_config,get_cluster_spec,[],5000),
+    {ok,Lock}=sd:call(etcd,etcd_paas_config,get_lock,[],5000),
+    {ok,CookieStr}=sd:call(etcd,etcd_cluster,get_cookie_str,[ClusterSpec],5000),
+    {ok,DeploymentRecords}=sd:call(etcd,etcd_cluster,get_deployment_records,[ClusterSpec],5000),
     true=erlang:set_cookie(node(),list_to_atom(CookieStr)),
     
     ?LOG_NOTICE("Server started",[]),
