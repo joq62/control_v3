@@ -92,8 +92,8 @@ missing_deployments(ClusterSpec)->
 missing_deployments([],Acc)->
     Acc;
 missing_deployments([DeploymentRecord|T],Acc)->
-    NodeIsAlive=sd:call(etcd,control_node,is_alive,[DeploymentRecord],1*5000),
-    ProviderIsAlive=sd:call(etcd,control_provider,is_alive,[DeploymentRecord],1*5000),
+    NodeIsAlive=sd:call(control,control_node,is_alive,[DeploymentRecord],1*5000),
+    ProviderIsAlive=sd:call(control,control_provider,is_alive,[DeploymentRecord],1*5000),
     ?LOG_NOTICE("NodeIsAlive,ProviderIsAlive,DeploymentRecord ",[NodeIsAlive,ProviderIsAlive,DeploymentRecord]),
     NewAcc=case {NodeIsAlive,ProviderIsAlive} of
 	       {true,true}->
