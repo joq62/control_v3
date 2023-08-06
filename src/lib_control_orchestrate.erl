@@ -101,7 +101,8 @@ missing_deployments([],Acc)->
 missing_deployments([DeploymentRecord|T],Acc)->
     NodeIsAlive=control_node:is_alive(DeploymentRecord),
     ProviderIsAlive=control_provider:is_alive(DeploymentRecord),
- %   ?LOG_NOTICE("NodeIsAlive,ProviderIsAlive,DeploymentRecord ",[NodeIsAlive,ProviderIsAlive,DeploymentRecord]),
+    {ok,Node}=sd:call(etcd,etcd_deployment_record,get_node,[DeploymentRecord],5000),
+    ?LOG_NOTICE("NodeIsAlive,ProviderIsAlive,Node ",[NodeIsAlive,ProviderIsAlive,Node]),
     NewAcc=case {NodeIsAlive,ProviderIsAlive} of
 	       {true,true}->
 		   Acc;
