@@ -59,8 +59,8 @@ start_deployments(MissingDeployments,ClusterSpec)->
 start_deployments([],_ClusterSpec,Acc)->
     Acc;
 start_deployments([DeploymentRecord|T],ClusterSpec,Acc) ->
-    {ok,Node}=sd:call(etcd,etcd_deploment_record,get_node,[DeploymentRecord],5000),
-    {ok,Provider}=sd:call(etcd,etcd_deploment_record,get_provider,[DeploymentRecord],5000),
+    {ok,Node}=sd:call(etcd,etcd_deployment_record,get_node,[DeploymentRecord],5000),
+    {ok,Provider}=sd:call(etcd,etcd_deployment_record,get_provider,[DeploymentRecord],5000),
     NewAcc=case control_node:start_node(DeploymentRecord,ClusterSpec) of
 	       {error,Reason}->
 		   ?LOG_NOTICE("ERROR Failed to start Node ",[Node,Reason]),
