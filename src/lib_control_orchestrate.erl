@@ -59,18 +59,25 @@ start_deployments(MissingDeployments,ClusterSpec)->
 start_deployments([],_ClusterSpec,Acc)->
     Acc;
 start_deployments([DeploymentRecord|T],ClusterSpec,Acc) ->
+    {ok,Node}=sd:call(etcd,etcd_deploment_record,get_node,[DeploymentRecord],5000),
+    {ok,Provider}=sd:call(etcd,etcd_deploment_record,get_provider,[DeploymentRecord],5000),
     NewAcc=case control_node:start_node(DeploymentRecord,ClusterSpec) of
 	       {error,Reason}->
+		   ?LOG_NOTICE("ERROR Failed to start Node ",[Node,Reason]),
 		   [{error,Reason}|Acc];
 	       ok ->
+		   ?LOG_NOTICE("Ok Started Node ",[Node]),
 		   case control_provider:load_provider(DeploymentRecord) of
 		       {error,Reason}->
+			   ?LOG_NOTICE("ERROR Failed to Load Provider ",[Provider,Reason]),
 			   [{error,Reason}|Acc];
 		       ok->
 			   case control_provider:start_provider(DeploymentRecord) of
 			       {error,Reason}->
+				   ?LOG_NOTICE("ERROR Failed to Start Provider ",[Provider,Reason]),
 				   [{error,Reason}|Acc];
 			       ok->
+				   ?LOG_NOTICE("Restarted Provider at Node ",[Provider , Node]),
 				   [{ok,DeploymentRecord}|Acc]
 			   end
 		   end
@@ -92,9 +99,9 @@ missing_deployments(ClusterSpec)->
 missing_deployments([],Acc)->
     Acc;
 missing_deployments([DeploymentRecord|T],Acc)->
-    NodeIsAlive=sd:call(control,control_node,is_alive,[DeploymentRecord],1*5000),
-    ProviderIsAlive=sd:call(control,control_provider,is_alive,[DeploymentRecord],1*5000),
-    ?LOG_NOTICE("NodeIsAlive,ProviderIsAlive,DeploymentRecord ",[NodeIsAlive,ProviderIsAlive,DeploymentRecord]),
+    NodeIsAlive=control_node:is_alive(DeploymentRecord),
+    ProviderIsAlive=control_provider:is_alive(DeploymentRecord),
+ %   ?LOG_NOTICE("NodeIsAlive,ProviderIsAlive,DeploymentRecord ",[NodeIsAlive,ProviderIsAlive,DeploymentRecord]),
     NewAcc=case {NodeIsAlive,ProviderIsAlive} of
 	       {true,true}->
 		   Acc;
