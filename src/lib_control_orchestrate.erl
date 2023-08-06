@@ -92,6 +92,7 @@ start_deployments([DeploymentRecord|T],ClusterSpec,Acc) ->
 %%--------------------------------------------------------------------
 missing_deployments(ClusterSpec)->
     {ok,DeploymentRecords}=sd:call(etcd,etcd_cluster,get_deployment_records,[ClusterSpec],5000),
+    ?LOG_NOTICE("Debug  ",[DeploymentRecords]),
     missing_deployments(DeploymentRecords,[]).
     
 
