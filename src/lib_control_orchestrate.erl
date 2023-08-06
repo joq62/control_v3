@@ -42,7 +42,7 @@ start(Interval)->
 		       {error,Reason}->
 			   {error,Reason};
 		       ok->
-			   StartResults
+			   {StartResults,TransAction}
 		   end
 	   end,
     ?LOG_NOTICE("Debug ",[node(),Result]),
