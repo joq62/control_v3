@@ -107,15 +107,16 @@ init([]) ->
     {ok,ClusterSpec}=sd:call(etcd,etcd_paas_config,get_cluster_spec,[],5000),
     {ok,Lock}=sd:call(etcd,etcd_paas_config,get_lock,[],5000),
 
-   % MonitoredNodes=lib_control_monitor:set_monitor_nodes(ClusterSpec),
-   % MonitoredProviders=lib_control_monitor:set_monitor_providers(ClusterSpec),
-    MonitoredNodes=test_1,
-    MonitoredProviders=test_2,
+    StartProviders=lib_control_monitor:start_providers(ClusterSpec,Lock,?LockTimeOut),
+    io:format("StartProviders ~p~n",[{StartProviders,?MODULE,?LINE}]),
+
+    MonitoredNodes=lib_control_monitor:set_monitor_nodes(ClusterSpec),
+    MonitoredProviders=lib_control_monitor:set_monitor_providers(ClusterSpec),
+    %MonitoredNodes=test_1,
+    %MonitoredProviders=test_2,
     io:format("MonitoredNodes ~p~n",[{MonitoredNodes,?MODULE,?LINE}]),
     io:format("MonitoredProviders ~p~n",[{MonitoredProviders,?MODULE,?LINE}]),
 
-    StartProviders=lib_control_monitor:start_providers(ClusterSpec,Lock,?LockTimeOut),
-    io:format("StartProviders ~p~n",[{StartProviders,?MODULE,?LINE}]),
 
     ?LOG_NOTICE("Server started, MonitoredNodes ",[MonitoredNodes,MonitoredProviders]),
     
