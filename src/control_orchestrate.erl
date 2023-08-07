@@ -36,7 +36,7 @@
 
 -define(SERVER, ?MODULE).
 
--record(state, {}).
+-record(state, {last_result}).
 
 %%%===================================================================
 %%% API
@@ -103,7 +103,7 @@ stop()-> gen_server:call(?SERVER, {stop},infinity).
 init([]) ->
     spawn(fun()->lib_control_orchestrate:start(?OrchestrateInterval) end),
     ?LOG_NOTICE("Server started ",[]),
-    {ok, #state{}}.
+    {ok, #state{last_result=[]}}.
 
 
 %%--------------------------------------------------------------------
@@ -132,9 +132,26 @@ handle_cast({orchestrate}, State) ->
     {noreply, State};
 
 handle_cast({result,Result}, State) ->
-    io:format("Result ~p~n",[{?MODULE,?LINE,Result}]),
+ %   io:format("Result ~p~n",[{?MODULE,?LINE,Result}]),
+    case Result of
+	{ok,R}->
+	    if 
+		State#state.last_result =:= Result->
+		    NewState=State,
+		    no_logging;
+		true->
+		    ?LOG_NOTICE("System Event ",Result),
+		    NewState=State#state{last_result=Result}
+	    end;
+	{badrpc,Reason}->
+	    NewState=State,
+	    ?LOG_WARNING("Orchestrate'Result failure ",[{badrpc,Reason}]);
+	locked->
+	    NewState=State,
+	    no_logging
+    end,
     spawn(fun()->lib_control_orchestrate:start(?OrchestrateInterval) end),
-    {noreply, State};
+    {noreply, NewState};
 
 handle_cast(UnMatchedSignal, State) ->
     io:format("unmatched_signal ~p~n",[{UnMatchedSignal,?MODULE,?LINE}]),

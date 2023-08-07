@@ -77,7 +77,7 @@ create_del_node_and_app()->
 
 
 setup(ClusterSpec)->
-    io:format("Start ~p~n",[{?MODULE,?FUNCTION_NAME}]),
+    io:format("Start ~p~n",[{?MODULE,?FUNCTION_NAME,ClusterSpec}]),
     ok=application:start(log),
     pong=log:ping(),
     %
@@ -89,8 +89,9 @@ setup(ClusterSpec)->
     ok=etcd_paas_config:create(ClusterSpec,lock_test),
     ok=etcd_lock:create(lock_test),
     {ok,DeploymentRecords}=etcd_deployment_record:create_records(ClusterSpec),
+    io:format("DeploymentRecords ~p~n",[{?MODULE,?FUNCTION_NAME,DeploymentRecords}]),
     ok=etcd_cluster:set_deployment_records(DeploymentRecords,ClusterSpec),
-   
+    
     % kill nodes
     KilledNodes=kill_nodes(DeploymentRecords,[]),
     io:format("KilledNodes ~p~n",[{?MODULE,?FUNCTION_NAME,KilledNodes}]),
