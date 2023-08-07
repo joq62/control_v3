@@ -172,7 +172,7 @@ is_node_started(_N,_Node,true)->
 is_node_started(0,_Node,Boolean) ->
     Boolean;
 is_node_started(N,Node,_) ->
-    io:format(" ~p~n",[{N,Node,?MODULE,?LINE}]),
+    io:format(" ~p~n",[{N,Node,erlang:get_cookie(),?MODULE,?LINE}]),
     Boolean=case net_adm:ping(Node) of
 		pang->
 		    timer:sleep(30),

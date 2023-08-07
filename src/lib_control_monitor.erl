@@ -125,7 +125,7 @@ start_deployments([DeploymentRecord|T],ClusterSpec,Acc) ->
     {ok,Provider}=sd:call(etcd,etcd_deployment_record,get_provider,[DeploymentRecord],5000),
     NewAcc=case control_node:start_node(DeploymentRecord,ClusterSpec) of
 	       {error,Reason}->
-		   ?LOG_WARNING("ERROR Failed to start Node ",[Node,Reason]),
+		   ?LOG_WARNING("ERROR Failed to start Node ",[Node,Reason,?MODULE,?LINE]),
 		   [{error,Reason}|Acc];
 	       ok ->
 		   case control_provider:load_provider(DeploymentRecord) of

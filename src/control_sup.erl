@@ -33,7 +33,7 @@ init([]) ->
 		  #{id=>lib_ssh,
 		    start=>{ssh_server,start_link,[]}},
 		  #{id=>control,
-		    start=>{control,start_link,[]}}
+		    start=>{control,start_link,[]}},
 		  #{id=>control_node,
 		   start=>{control_node,start_link,[]}},
 		  #{id=>control_provider,
