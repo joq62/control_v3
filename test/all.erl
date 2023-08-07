@@ -91,9 +91,20 @@ setup(ClusterSpec)->
     {ok,DeploymentRecords}=etcd_deployment_record:create_records(ClusterSpec),
     ok=etcd_cluster:set_deployment_records(DeploymentRecords,ClusterSpec),
    
+    % kill nodes
+    KilledNodes=kill_nodes(DeploymentRecords,[]),
+    io:format("KilledNodes ~p~n",[{?MODULE,?FUNCTION_NAME,KilledNodes}]),
+
     %% End  Simulate sys_boot
 
     ok=application:start(control),
     pong=ssh_server:ping(),
     pong=control:ping(),
     ok.
+
+kill_nodes([],Acc)->
+    Acc;
+kill_nodes([DeploymentRecord|T],Acc)->
+    {ok,Node}=etcd_deployment_record:get_node(DeploymentRecord),
+    R=rpc:call(Node,init,stop,[],5000),
+    kill_nodes(T,[{R,Node}|Acc]).
