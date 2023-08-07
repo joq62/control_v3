@@ -136,12 +136,18 @@ handle_cast({result,Result}, State) ->
     case Result of
 	{ok,R}->
 	    if 
-		State#state.last_result =:= Result->
+		State#state.last_result =:= R->
 		    NewState=State,
 		    no_logging;
 		true->
-		    ?LOG_NOTICE("System Event ",Result),
-		    NewState=State#state{last_result=Result}
+		    case R of
+			[]->
+			    ?LOG_NOTICE("System Event ",["Wanted state "]),
+			    NewState=State#state{last_result=R};
+			R ->
+			    ?LOG_NOTICE("System Event ",R),
+			    NewState=State#state{last_result=R}
+		    end
 	    end;
 	{badrpc,Reason}->
 	    NewState=State,
