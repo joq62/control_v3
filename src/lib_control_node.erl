@@ -155,7 +155,7 @@ create_vm(NodeName,Node,CookieStr,HostSpec)->
     ErlStart=ssh_server:send_msg(Ip,Port,Uid,Pwd,LinuxCmd,TimeOut),
     case is_node_started(Node) of
 	false->
-	    {error,["Failed to start Node ",Node,ErlStart,?MODULE,?LINE]};
+	    {error,["Failed to start Node,ErlStart ",Node,ErlStart,?MODULE,?LINE]};
 	true->
 	    ok
     end.
@@ -172,6 +172,7 @@ is_node_started(_N,_Node,true)->
 is_node_started(0,_Node,Boolean) ->
     Boolean;
 is_node_started(N,Node,_) ->
+    io:format(" ~p~n",[{N,Node,?MODULE,?LINE}]),
     Boolean=case net_adm:ping(Node) of
 		pang->
 		    timer:sleep(30),
