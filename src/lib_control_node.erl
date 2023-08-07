@@ -78,7 +78,7 @@ stop_node(DeploymentRecord)->
     del_dir(Dir,HostSpec),
     case kill_vm(Node) of
 	false->
-	    {error,["Failed to stop node ",DeploymentRecord]};
+	    {error,["Failed to stop node ",DeploymentRecord,?MODULE,?LINE]};
 	true->
 	    ok
     end.
@@ -155,7 +155,7 @@ create_vm(NodeName,Node,CookieStr,HostSpec)->
     ErlStart=ssh_server:send_msg(Ip,Port,Uid,Pwd,LinuxCmd,TimeOut),
     case is_node_started(Node) of
 	false->
-	    {error,["Failed to start Node ",Node,ErlStart]};
+	    {error,["Failed to start Node ",Node,ErlStart,?MODULE,?LINE]};
 	true->
 	    ok
     end.
