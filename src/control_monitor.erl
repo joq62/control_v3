@@ -16,7 +16,7 @@
 
 -include("log.api").
  
--define(OrchestrateInterval,1*20*1000).
+-define(LockTimeOut,1*60*1000).
 
 %% API
 
@@ -38,7 +38,8 @@
 -define(SERVER, ?MODULE).
 
 -record(state, {monitored_nodes,
-		monitored_providers
+		monitored_providers,
+		lock
 	       }).
 
 %%%===================================================================
@@ -106,14 +107,21 @@ init([]) ->
     {ok,ClusterSpec}=sd:call(etcd,etcd_paas_config,get_cluster_spec,[],5000),
     {ok,Lock}=sd:call(etcd,etcd_paas_config,get_lock,[],5000),
 
+    StartProviders=lib_control_monitor:start_providers(ClusterSpec,Lock,?LockTimeOut),
+    io:format("StartProviders ~p~n",[{StartProviders,?MODULE,?LINE}]),
+
     MonitoredNodes=lib_control_monitor:set_monitor_nodes(ClusterSpec),
     MonitoredProviders=lib_control_monitor:set_monitor_providers(ClusterSpec),
     io:format("MonitoredNodes ~p~n",[{MonitoredNodes,?MODULE,?LINE}]),
     io:format("MonitoredProviders ~p~n",[{MonitoredProviders,?MODULE,?LINE}]),
+
     ?LOG_NOTICE("Server started, MonitoredNodes ",[MonitoredNodes,MonitoredProviders]),
     
-    {ok, #state{monitored_nodes=MonitoredNodes,
-		monitored_providers=MonitoredProviders}}.
+    {ok, #state{
+	    monitored_nodes=MonitoredNodes,
+	    monitored_providers=MonitoredProviders,
+	    lock=Lock
+	   }}.
 
 
 %%--------------------------------------------------------------------

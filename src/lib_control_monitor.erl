@@ -11,6 +11,7 @@
 
 %% API
 -export([
+	 start_providers/3,
 	 set_monitor_node/1,
 	 set_monitor_nodes/1,
 	 set_monitor_provider/1,
@@ -89,3 +90,83 @@ set_monitor_providers([DeploymentRecord|T],Acc)->
 %% @spec
 %% @end
 %%--------------------------------------------------------------------
+start_providers(ClusterSpec,Lock,LockTimeOut)->
+    Result=case sd:call(etcd,etcd_lock,try_lock,[Lock,LockTimeOut],5000) of
+	       {badrpc,Reason}->
+		   {badrpc,Reason};
+	       locked->
+		   locked; 
+	       {ok,TransAction}->
+		   MissingDeployments=missing_deployments(ClusterSpec),
+		   StartResults=start_deployments(MissingDeployments,ClusterSpec),
+		   case sd:call(etcd,etcd_lock,unlock,[Lock,TransAction],5000) of
+		       {badrpc,Reason}->
+			   {badrpc,Reason};
+		       {error,Reason}->
+			   {error,Reason};
+		       ok->
+			   {ok,StartResults}
+		   end
+	   end,
+    Result.
+
+%%--------------------------------------------------------------------
+%% @doc
+%% @spec
+%% @end
+%%--------------------------------------------------------------------
+start_deployments(MissingDeployments,ClusterSpec)->
+    start_deployments(MissingDeployments,ClusterSpec,[]).
+
+start_deployments([],_ClusterSpec,Acc)->
+    Acc;
+start_deployments([DeploymentRecord|T],ClusterSpec,Acc) ->
+    {ok,Node}=sd:call(etcd,etcd_deployment_record,get_node,[DeploymentRecord],5000),
+    {ok,Provider}=sd:call(etcd,etcd_deployment_record,get_provider,[DeploymentRecord],5000),
+    NewAcc=case control_node:start_node(DeploymentRecord,ClusterSpec) of
+	       {error,Reason}->
+		   ?LOG_WARNING("ERROR Failed to start Node ",[Node,Reason]),
+		   [{error,Reason}|Acc];
+	       ok ->
+		   case control_provider:load_provider(DeploymentRecord) of
+		       {error,Reason}->
+			   ?LOG_WARNING("ERROR Failed to Load Provider ",[Provider,Reason]),
+			   [{error,Reason}|Acc];
+		       ok->
+			   case control_provider:start_provider(DeploymentRecord) of
+			       {error,Reason}->
+				   ?LOG_WARNING("ERROR Failed to Start Provider ",[Provider,Reason]),
+				   [{error,Reason}|Acc];
+			       ok->
+				  % ?LOG_NOTICE("Restarted Provider at Node ",[Provider , Node]),
+				   [{ok,DeploymentRecord}|Acc]
+			   end
+		   end
+	   end,
+    start_deployments(T,ClusterSpec,NewAcc).
+			   
+
+%%--------------------------------------------------------------------
+%% @doc
+%% @spec
+%% @end
+%%--------------------------------------------------------------------
+missing_deployments(ClusterSpec)->
+    {ok,DeploymentRecords}=sd:call(etcd,etcd_cluster,get_deployment_records,[ClusterSpec],5000),
+    missing_deployments(DeploymentRecords,[]).
+    
+
+
+missing_deployments([],Acc)->
+    Acc;
+missing_deployments([DeploymentRecord|T],Acc)->
+    NodeIsAlive=control_node:is_alive(DeploymentRecord),
+    ProviderIsAlive=control_provider:is_alive(DeploymentRecord),
+    {ok,Node}=sd:call(etcd,etcd_deployment_record,get_node,[DeploymentRecord],5000),
+    NewAcc=case {NodeIsAlive,ProviderIsAlive} of
+	       {true,true}->
+		   Acc;
+	       _->
+		   [DeploymentRecord|Acc]
+	   end,
+    missing_deployments(T,NewAcc).
