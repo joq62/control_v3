@@ -28,6 +28,7 @@
 start([ClusterSpec])->
    
     ok=setup(ClusterSpec),
+    ok=monitor_test:start(),
   %  ok=create_del_node_and_app(),
    % io:format("Test OK !!! ~p~n",[?MODULE]),
     io:format("OK there you go !!! ~p~n",[?MODULE]),
