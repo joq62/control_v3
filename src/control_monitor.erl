@@ -112,11 +112,8 @@ init([]) ->
 
     MonitoredNodes=lib_control_monitor:set_monitor_nodes(ClusterSpec),
     MonitoredProviders=lib_control_monitor:set_monitor_providers(ClusterSpec),
-    %MonitoredNodes=test_1,
-    %MonitoredProviders=test_2,
     io:format("MonitoredNodes ~p~n",[{MonitoredNodes,?MODULE,?LINE}]),
     io:format("MonitoredProviders ~p~n",[{MonitoredProviders,?MODULE,?LINE}]),
-
 
     ?LOG_NOTICE("Server started, MonitoredNodes ",[MonitoredNodes,MonitoredProviders]),
     
