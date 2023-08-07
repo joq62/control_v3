@@ -112,7 +112,6 @@ init([]) ->
     io:format("MonitoredNodes ~p~n",[{MonitoredNodes,?MODULE,?LINE}]),
     io:format("MonitoredProviders ~p~n",[{MonitoredProviders,?MODULE,?LINE}]),
 
-    StartProviders=lib_control_monitor:start_nodes(ClusterSpec,Lock,?LockTimeOut),
     StartProviders=lib_control_monitor:start_providers(ClusterSpec,Lock,?LockTimeOut),
     io:format("StartProviders ~p~n",[{StartProviders,?MODULE,?LINE}]),
 
