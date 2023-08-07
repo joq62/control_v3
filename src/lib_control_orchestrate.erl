@@ -30,7 +30,7 @@ start(Interval)->
 	       {badrpc,Reason}->
 		   {badrpc,Reason};
 	       locked->
-		   locked;
+		   locked; 
 	       {ok,TransAction}->
 		   {ok,ClusterSpec}=sd:call(etcd,etcd_paas_config,get_cluster_spec,[],5000),
 		   MissingDeployments=missing_deployments(ClusterSpec),
